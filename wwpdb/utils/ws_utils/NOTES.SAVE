@@ -1,0 +1,244 @@
+Start RabbitMQ
+
+/usr/local/sbin/rabbitmq-server
+
+Look at /usr/local/etc/rabbitmq/
+
+| => ls /usr/local/etc/rabbitmq/
+enabled_plugins         rabbitmq-env.conf
+
+
+| => rabbitmqctl status
+
+Assign a password to the default guest user
+| => rabbitmqctl add_user guest guest1234
+
+| => rabbitmqctl add_user rbmq-admin rbmq0000
+| => rabbitmqctl set_user_tags rbmq-admin administrator
+Setting tags for user "rbmq-admin" to [administrator] ...
+
+
+| => rabbitmqctl delete_user rb-admin
+Deleting user "rb-admin" ...
+
+| => rabbitmqctl add_user rbmq-admin rbmq0000
+Creating user "rbmq-admin" ...
+
+| => rabbitmqctl add_user rbmq-dev rbmq0000
+Creating user "rbmq-dev" ...
+
+| => rabbitmqctl set_user_tags rbmq-admin administrator
+Setting tags for user "rbmq-admin" to [administrator] ...
+
+| => rabbitmqctl add_vhost rbmq-vhost
+Creating vhost "rbmq-vhost" ...
+
+| => rabbitmqctl delete_user ccm-dev
+
+| =>  rabbitmqctl set_permissions -p rbmq-vhost rbmq-admin ".*" ".*" ".*"
+Setting permissions for user "rbmq-admin" in vhost "rbmq-vhost" ...
+
+| =>  rabbitmqctl set_permissions -p rbmq-vhost rbmq-dev ".*" ".*" ".*"
+Setting permissions for user "rbmq-dev" in vhost "rbmq-vhost" ...
+
+
+
+rabbitmqctl add_user rbmq-dev rbmq0000
+
+
+
+Start the admin interface -
+
+http://127.0.0.1:15672
+
+openssl s_client -connect localhost:5673 -cert rtt.mydev.cert.pem -key rtt.mydev.key.pem -CAfile ca-chain.cert.pem
+
+# ---------------------------------------------------------------
+
+from requests.auth import AuthBase
+
+class JwtAuth(AuthBase):
+    """Attaches HTTP Authentication to the given Request object."""
+
+    def __init__(self, token):
+        # setup any auth-related data here
+        self.token = token
+
+    def __call__(self, r):
+        # modify and return the request
+        r.headers['Authorization'] = "Bearer %s" % self.token
+        r.headers['AuthorizationApi'] = "Bearer %s" % self.token
+        return r
+
+
+    """
+        def sendMail(sender_name, to, subject, text, files=None,server="localhost"):
+          assert type(to)==list
+          if files:
+            assert type(files)==list
+          print "Files: ",files
+          fro = sender_name
+
+          msg = MIMEMultipart()
+          msg['From'] = fro
+          msg['To'] = COMMASPACE.join(to)
+          msg['Date'] = formatdate(localtime=True)
+          msg['Subject'] = subject
+
+          msg.attach( MIMEText(text) )
+
+          if files:
+            for file in files:
+    # ************** File attaching - Start **************
+                    part = MIMEBase('application', "octet-stream")
+                    part.set_payload( open(file,"rb").read() )
+                    Encoders.encode_base64(part)
+                    part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(file))
+                    msg.attach(part)
+    # ************** File attaching - End **************
+
+          server.set_debuglevel(1)
+          server.ehlo()
+          server.starttls()
+          server.ehlo()
+          server.sendmail(fro, to, msg.as_string())
+          server.quit()
+      """
+
+        """
+
+        def create_token(user):
+            payload = {
+                # subject
+                'sub': user.id,
+                #issued at
+                'iat': datetime.utcnow(),
+                #expiry
+                'exp': datetime.utcnow() + timedelta(days=1)
+            }
+
+            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+            return token.decode('unicode_escape')
+
+        def parse_token(req):
+            token = req.headers.get('Authorization').split()[1]
+            return jwt.decode(token, SECRET_KEY, algorithms='HS256')
+
+        def login_required(f):</pre>
+        <pre>    @wraps(f)
+            def decorated_function(*args, **kwargs):
+                if not request.headers.get('Authorization'):
+                    response = jsonify(message='Missing authorization header')
+                    response.status_code = 401
+                    return response
+                try:
+                    payload = parse_token(request)
+                except DecodeError:
+                    response = jsonify(message='Token is invalid')
+                    response.status_code = 401
+                    return response
+                except ExpiredSignature:
+                    response = jsonify(message='Token has expired')
+                    response.status_code = 401
+                    return response
+                g.user_id = payload['sub']
+                return f(*args, **kwargs)
+            return decorated_function
+
+
+        import jwt
+        import base64
+        import os
+
+        from functools import wraps
+        from flask import Flask, request, jsonify, _request_ctx_stack
+        from werkzeug.local import LocalProxy
+        from flask.ext.cors import cross_origin
+
+        app = Flask(__name__)
+        # Authentication annotation
+        current_user = LocalProxy(lambda: _request_ctx_stack.top.current_user)
+
+        # Authentication attribute/annotation
+        def authenticate(error):
+          resp = jsonify(error)
+
+          resp.status_code = 401
+
+          return resp
+
+        def requires_auth(f):
+          @wraps(f)
+          def decorated(*args, **kwargs):
+            auth = request.headers.get('Authorization', None)
+            if not auth:
+              return authenticate({'code': 'authorization_header_missing', 'description': 'Authorization header is expected'})
+
+            parts = auth.split()
+
+            if parts[0].lower() != 'bearer':
+              return {'code': 'invalid_header', 'description': 'Authorization header must start with Bearer'}
+            elif len(parts) == 1:
+              return {'code': 'invalid_header', 'description': 'Token not found'}
+            elif len(parts) > 2:
+              return {'code': 'invalid_header', 'description': 'Authorization header must be Bearer + \s + token'}
+
+            token = parts[1]
+            try:
+                payload = jwt.decode(
+                    token,
+                    base64.b64decode('YOUR_CLIENT_SECRET'.replace("_","/").replace("-","+")),
+                    audience='YOUR_CLIENT_ID'
+                )
+            except jwt.ExpiredSignature:
+                return authenticate({'code': 'token_expired', 'description': 'token is expired'})
+            except jwt.InvalidAudienceError:
+                return authenticate({'code': 'invalid_audience', 'description': 'incorrect audience, expected: YOUR_CLIENT_ID'})
+            except jwt.DecodeError:
+                return authenticate({'code': 'token_invalid_signature', 'description': 'token signature is invalid'})
+
+            _request_ctx_stack.top.current_user = user = payload
+            return f(*args, **kwargs)
+
+          return decorated
+        3. Use this annotation in your methods
+
+
+             ####
+            from datetime import datetime, timedelta
+            import jwt
+
+            JWT_SECRET = 'secret'
+            JWT_ALGORITHM = 'HS256'
+            JWT_EXP_DELTA_SECONDS = 20
+
+            async def login(request):
+                post_data = await request.post()
+
+                try:
+                    user = User.objects.get(email=post_data['email'])
+                    user.match_password(post_data['password'])
+                except (User.DoesNotExist, User.PasswordDoesNotMatch):
+                    return json_response({'message': 'Wrong credentials'}, status=400)
+
+                payload = {
+                    'user_id': user.id,
+                    'exp': datetime.utcnow() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
+                }
+                jwt_token = jwt.encode(payload, JWT_SECRET, JWT_ALGORITHM)
+                return json_response({'token': jwt_token.decode('utf-8')})
+
+              ##########
+
+            >>> import jwt
+            >>> encoded = jwt.encode({'some': 'payload'}, 'secret', algorithm='HS256')
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb21lIjoicGF5bG9hZCJ9.4twFt5NiznN84AWoo1d7KO1T_yoc0Z6XOpOVswacPZg'
+            Decoding a payload on the server
+
+            >>> jwt.decode(encoded, 'secret', algorithms=['HS256'])
+            {'some': 'payload'}
+            Hope the article was of help. Feel free to put your thoughts in the comment.
+
+            - See more at: http://blog.apcelent.com/json-web-token-tutorial-example-python.html#sthash.6uPtBxeO.dpuf
+
+        """
