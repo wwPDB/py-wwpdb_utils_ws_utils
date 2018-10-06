@@ -34,7 +34,7 @@ import time
 
 import logging
 #
-from wwpdb.api.facade.ConfigInfo import ConfigInfo
+from wwpdb.api.config.ConfigInfo import ConfigInfo
 from wwpdb.utils.ws_utils.ServiceDataStore import ServiceDataStore
 
 from wwpdb.utils.ws_utils.ServiceSessionState import ServiceSessionState
