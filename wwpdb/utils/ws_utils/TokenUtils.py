@@ -35,16 +35,17 @@ from oslo_concurrency import lockutils
 
 import logging
 #
-from wwpdb.api.facade.ConfigInfo import ConfigInfo
+from wwpdb.api.config.ConfigInfo import ConfigInfo
 
 logger = logging.getLogger()
 
 
 class TokenUtilsBase(object):
 
-    def __init__(self, siteId=None, tokenPrefix=None):
+    def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
         """
          Base class supporting application token management in persistent store.
+         kwargs allows for overriding ConfigInfo for testing
 
         """
         #
@@ -55,10 +56,14 @@ class TokenUtilsBase(object):
         else:
             fn = 'ANONYMOUSWS_TOKEN_STORE.pic'
         #
-        self.__filePath = os.path.join(self._cI.get("SITE_SERVICE_REGISTRATION_DIR_PATH"), fn)
+        self.__filePath = kwargs.get('site_service_registration_dir_path')
+        if not self.__filePath:
+            self.__filePath = os.path.join(self._cI.get("SITE_SERVICE_REGISTRATION_DIR_PATH"), fn)
         #
         logger.debug("Assigning token store file path %r" % self.__filePath)
-        self.__lockDirPath = self._cI.get("SITE_SERVICE_REGISTRATION_LOCKDIR_PATH", '.')
+        self.__lockDirPath = kwargs.get("site_service_registration_lockdir_path")
+        if not self.__lockDirPath:
+            self.__lockDirPath = self._cI.get("SITE_SERVICE_REGISTRATION_LOCKDIR_PATH", '.')
         #
         self.__tokenD = {}
         self.__emailD = {}
@@ -199,12 +204,12 @@ class TokenUtilsBase(object):
 
 class JwtTokenUtils(TokenUtilsBase):
 
-    def __init__(self, siteId=None, tokenPrefix=None):
+    def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
         """
         Token utilities for registration webservice
 
         """
-        super(JwtTokenUtils, self).__init__(siteId=siteId, tokenPrefix=tokenPrefix)
+        super(JwtTokenUtils, self).__init__(siteId=siteId, tokenPrefix=tokenPrefix, **kwargs)
         #
         # self.__inputToken = self._reqObj.getValue('authorization').split()[1]
         #
