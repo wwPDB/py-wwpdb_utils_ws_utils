@@ -16,7 +16,10 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 import logging
-import cPickle
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
 import os.path
 import copy
 import datetime
@@ -46,7 +49,7 @@ class ServiceHistory(object):
 
     def __setup(self):
         #
-        #self.__pickleProtocol = cPickle.HIGHEST_PROTOCOL
+        #self.__pickleProtocol = pickle.HIGHEST_PROTOCOL
         self.__pickleProtocol = 0
         try:
             self.__filePath = os.path.join(self.__historyPath, "history-session-store.pic")
@@ -61,7 +64,7 @@ class ServiceHistory(object):
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:
             try:
                 with open(self.__filePath, mode) as fb:
-                    cPickle.dump(iD, fb, self.__pickleProtocol)
+                    pickle.dump(iD, fb, self.__pickleProtocol)
                 return True
             except:
                 logger.exception("Serialization failure with file %s" % self.__filePath)
@@ -83,7 +86,7 @@ class ServiceHistory(object):
                     while True:
                         # process each record and quit at eof
                         try:
-                            d = cPickle.load(fb)
+                            d = pickle.load(fb)
                             # logger.info("Read activity record %r" % d)
                             if d['sid'] not in rD:
                                 rD[d['sid']] = {}

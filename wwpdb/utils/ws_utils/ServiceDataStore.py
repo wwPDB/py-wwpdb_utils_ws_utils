@@ -20,7 +20,10 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
-import cPickle
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
 import os.path
 import logging
 from wwpdb.utils.ws_utils.ServiceLockFile import ServiceLockFile
@@ -48,7 +51,7 @@ class ServiceDataStore(object):
 
     def __setup(self):
         #
-        # self.__pickleProtocol = cPickle.HIGHEST_PROTOCOL
+        # self.__pickleProtocol = pickle.HIGHEST_PROTOCOL
         self.__pickleProtocol = 0
         try:
             self.__filePath = os.path.join(self.__sessionPath, self.__filePrefix + "-session-store.pic")
@@ -60,7 +63,7 @@ class ServiceDataStore(object):
 
         try:
             with open(self.__filePath, 'wb') as fb:
-                cPickle.dump(iD, fb, self.__pickleProtocol)
+                pickle.dump(iD, fb, self.__pickleProtocol)
             if 'status' in iD:
                 logger.debug("Session %s - wrote status value %r" % (self.__sessionPath, iD['status']))
             return True
@@ -78,7 +81,7 @@ class ServiceDataStore(object):
             pass
         try:
             with open(self.__filePath, 'rb') as fb:
-                rD = cPickle.load(fb)
+                rD = pickle.load(fb)
         except:
             logger.exception("Deserialization failure with file %s" % self.__filePath)
 
@@ -91,7 +94,7 @@ class ServiceDataStore(object):
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:
             try:
                 with open(self.__filePath, 'wb') as fb:
-                    cPickle.dump(iD, fb, self.__pickleProtocol)
+                    pickle.dump(iD, fb, self.__pickleProtocol)
                 if 'status' in iD:
                     logger.debug("Wrote status value %r" % iD['status'])
                 return True
@@ -110,7 +113,7 @@ class ServiceDataStore(object):
                 pass
             try:
                 with open(self.__filePath, 'rb') as fb:
-                    rD = cPickle.load(fb)
+                    rD = pickle.load(fb)
             except:
                 logger.exception("Deserialization failure with file %s" % self.__filePath)
 

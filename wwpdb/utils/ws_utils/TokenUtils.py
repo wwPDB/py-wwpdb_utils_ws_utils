@@ -28,7 +28,10 @@ __version__ = "V0.07"
 import os
 import datetime
 
-import cPickle
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
 
 import jwt
 from oslo_concurrency import lockutils
@@ -93,8 +96,8 @@ class TokenUtilsBase(object):
     def serialize(self):
         try:
             with open(self.__filePath, 'wb') as outfile:
-                cPickle.dump(self.__tokenD, outfile, self.__pickleProtocol)
-                cPickle.dump(self.__emailD, outfile, self.__pickleProtocol)
+                pickle.dump(self.__tokenD, outfile, self.__pickleProtocol)
+                pickle.dump(self.__emailD, outfile, self.__pickleProtocol)
             return True
         except:
             logger.exception("FAILING")
@@ -103,8 +106,8 @@ class TokenUtilsBase(object):
     def deserialize(self):
         try:
             with open(self.__filePath, 'rb') as outfile:
-                self.__tokenD = cPickle.load(outfile)
-                self.__emailD = cPickle.load(outfile)
+                self.__tokenD = pickle.load(outfile)
+                self.__emailD = pickle.load(outfile)
             logger.debug("Recovered %4d token Ids %4d e-mails" % (len(self.__tokenD), len(self.__emailD)))
             return True
         except:
