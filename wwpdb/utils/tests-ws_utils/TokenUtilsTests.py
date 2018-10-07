@@ -32,6 +32,7 @@ import sys
 import datetime
 import logging
 import pytz
+from past.builtins import xrange
 
 from wwpdb.utils.ws_utils.TokenUtils import JwtTokenUtils
 from wwpdb.utils.ws_utils.ServiceSmtpUtils import ServiceSmtpUtils
