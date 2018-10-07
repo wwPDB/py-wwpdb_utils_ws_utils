@@ -53,7 +53,7 @@ setup(
     #
     # These basic tests require no database services -
     test_suite="wwpdb.utils.tests-ws_utils",
-    tests_require=['tox'],
+    tests_require=['tox', 'future'],
     #
     # Not configured ...
     extras_require={
