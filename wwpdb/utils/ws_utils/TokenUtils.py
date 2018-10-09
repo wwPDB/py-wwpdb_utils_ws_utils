@@ -38,7 +38,7 @@ from oslo_concurrency import lockutils
 
 import logging
 #
-from wwpdb.api.config.ConfigInfo import ConfigInfo
+from wwpdb.utils.config.ConfigInfo import ConfigInfo
 
 logger = logging.getLogger()
 

@@ -44,7 +44,7 @@ setup(
         'console_scripts': []
     },
     #
-    install_requires=['pytz', 'PyJWT', 'oslo.concurrency', 'wwpdb.api.config', 'webob'],
+    install_requires=['pytz', 'PyJWT', 'oslo.concurrency', 'wwpdb.utils.config', 'webob'],
     packages=find_packages(exclude=['wwpdb.utils.tests-ws_utils', 'mock-data', 'tests.*']),
     package_data={
         # If any package contains *.md or *.rst ...  files, include them:
