@@ -1,0 +1,6 @@
+PyJWT
+oslo.concurrency
+wwpdb.utils.config
+webob
+# For testing - xrange
+future
