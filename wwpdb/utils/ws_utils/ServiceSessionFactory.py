@@ -41,8 +41,8 @@ class ServiceSessionFactory(object):
              :param string serviceId: is the path to the directory containing the hash-id sub-directory.
 
         """
-        self.__topSessionPath = topPath if topPath else '.'
-        self.__serviceUserId = serviceUserId if serviceUserId else 'ANONYMOUS'
+        self.__topSessionPath = topPath if topPath else "."
+        self.__serviceUserId = serviceUserId if serviceUserId else "ANONYMOUS"
         self.__uid = None
 
     def __str__(self):
@@ -118,7 +118,7 @@ class ServiceSessionFactory(object):
         """
         try:
             pth = self.__getPath()
-            if (not os.access(pth, os.F_OK)):
+            if not os.access(pth, os.F_OK):
                 os.makedirs(pth)
             return pth
         except:  # noqa: E722 pylint: disable=bare-except
@@ -127,7 +127,7 @@ class ServiceSessionFactory(object):
     def remakeSessionPath(self):
         try:
             pth = self.__getPath()
-            if (os.access(pth, os.F_OK)):
+            if os.access(pth, os.F_OK):
                 shutil.rmtree(pth, True)
             os.makedirs(pth)
             return pth

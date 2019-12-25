@@ -38,7 +38,7 @@ class ServiceLockFile(object):
 
     """
 
-    def __init__(self, filePath, timeoutSeconds=15, retrySeconds=.2):
+    def __init__(self, filePath, timeoutSeconds=15, retrySeconds=0.2):
         """ Prepare the file locker. Specify the file to lock and optionally
             the maximum timeoutSeconds and the retrySeconds between each attempt to lock.
 
@@ -77,8 +77,7 @@ class ServiceLockFile(object):
                 # handle timeout and retry -
                 if (time.time() - timeBegin) >= self.__timeoutSeconds:
                     logger.debug("ServiceLockfile(acquire) Failed to acquire lock within timeout %r", self.__timeoutSeconds)
-                    raise LockFileTimeoutException("ServiceLockFile(acquire) Internal timeout of %d (seconds) exceeded for %s" %
-                                                   (self.__timeoutSeconds, self.__filePath))
+                    raise LockFileTimeoutException("ServiceLockFile(acquire) Internal timeout of %d (seconds) exceeded for %s" % (self.__timeoutSeconds, self.__filePath))
                 if self.__debug:
                     logger.debug("Lock file retry for file %s", self.__lockFilePath)
                 time.sleep(self.__retrySeconds)

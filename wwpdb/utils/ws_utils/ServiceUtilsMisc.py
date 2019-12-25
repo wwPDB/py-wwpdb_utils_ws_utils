@@ -13,11 +13,12 @@ Utility functions supporting web service classes.
 import hashlib
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 def getMD5(path, block_size=4096, hr=True):
-    '''
+    """
     Chunked MD5 function -
 
     Block size directly depends on the block size of your filesystem
@@ -27,10 +28,10 @@ def getMD5(path, block_size=4096, hr=True):
         sudo /sbin/blockdev --getbsz /dev/sda1
         > Block size:               4096
 
-    '''
+    """
     md5 = hashlib.md5()
-    with open(path, 'rb') as f:
-        for chunk in iter(lambda: f.read(block_size), b''):
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(block_size), b""):
             md5.update(chunk)
     if hr:
         return md5.hexdigest()

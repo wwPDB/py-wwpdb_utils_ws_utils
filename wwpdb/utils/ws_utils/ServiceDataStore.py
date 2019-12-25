@@ -62,10 +62,10 @@ class ServiceDataStore(object):
     def __serialize(self, iD):
 
         try:
-            with open(self.__filePath, 'wb') as fb:
+            with open(self.__filePath, "wb") as fb:
                 pickle.dump(iD, fb, self.__pickleProtocol)
-            if 'status' in iD:
-                logger.debug("Session %s - wrote status value %r", self.__sessionPath, iD['status'])
+            if "status" in iD:
+                logger.debug("Session %s - wrote status value %r", self.__sessionPath, iD["status"])
             return True
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("Serialization failure with file %s", self.__filePath)
@@ -80,23 +80,24 @@ class ServiceDataStore(object):
         except:  # noqa: E722 pylint: disable=bare-except
             pass
         try:
-            with open(self.__filePath, 'rb') as fb:
+            with open(self.__filePath, "rb") as fb:
                 rD = pickle.load(fb)
         except Exception as e:
             logger.exception("Deserialization failure with file %s - %r", self.__filePath, str(e))
 
-        if 'status' in rD:
-            logger.debug("Session %s - read dictionary %r", self.__sessionPath, rD['status'])
+        if "status" in rD:
+            logger.debug("Session %s - read dictionary %r", self.__sessionPath, rD["status"])
         return rD
+
     #
 
     def __serializeLocking(self, iD):
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
             try:
-                with open(self.__filePath, 'wb') as fb:
+                with open(self.__filePath, "wb") as fb:
                     pickle.dump(iD, fb, self.__pickleProtocol)
-                if 'status' in iD:
-                    logger.debug("Wrote status value %r", iD['status'])
+                if "status" in iD:
+                    logger.debug("Wrote status value %r", iD["status"])
                 return True
             except Exception as e:
                 logger.exception("Serialization failure with file %s - %r", self.__filePath, str(e))
@@ -112,7 +113,7 @@ class ServiceDataStore(object):
             except:  # noqa: E722 pylint: disable=bare-except
                 pass
             try:
-                with open(self.__filePath, 'rb') as fb:
+                with open(self.__filePath, "rb") as fb:
                     rD = pickle.load(fb)
             except Exception as e:
                 logger.exception("Deserialization failure with file %s - %r", self.__filePath, str(e))
@@ -121,18 +122,18 @@ class ServiceDataStore(object):
 
     def __str__(self):
         try:
-            return '\n  '.join(self.__outputList())
+            return "\n  ".join(self.__outputList())
         except:  # noqa: E722 pylint: disable=bare-except
-            return ''
+            return ""
 
     def __repr__(self):
         return self.__str__()
 
     def dump(self, format="text"):  # pylint: disable=redefined-builtin,unused-argument
         try:
-            return '\n   '.join(self.__outputList())
+            return "\n   ".join(self.__outputList())
         except:  # noqa: E722 pylint: disable=bare-except
-            return ''
+            return ""
 
     def getFilePath(self):
         return self.__filePath
@@ -140,7 +141,7 @@ class ServiceDataStore(object):
     #
     #  Getters()  reread before any access -
     #
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def __outputList(self):
         rD = self.__deserialize()
         sL = []
@@ -150,15 +151,15 @@ class ServiceDataStore(object):
             sL.append("     - Key: %-35s  value(s): %r" % (k, v))
         return sL
 
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def get(self, key):
         try:
             rD = self.__deserialize()
-            return(rD[key])
+            return rD[key]
         except:  # noqa: E722 pylint: disable=bare-except
-            return ''
+            return ""
 
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def getDictionary(self):
         rD = self.__deserialize()
         return rD
@@ -166,7 +167,7 @@ class ServiceDataStore(object):
     #
     #  Setters ()
     #
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def set(self, key, value, overWrite=True):
         try:
             rD = self.__deserialize()
@@ -184,7 +185,7 @@ class ServiceDataStore(object):
             logger.exception("Failure of set for key %r value %r error %r", key, value, str(e))
             return False
 
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def update(self, uDict):
         """  Update (without overwrite) objects in the first level dictionary store.
         """
@@ -212,7 +213,7 @@ class ServiceDataStore(object):
             logger.exception("Failure for uDict %r %r", uDict, str(e))
             return False
 
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def updateAll(self, uDict):
         """  Update with overwrite values first level dictionary store.
         """
@@ -220,14 +221,14 @@ class ServiceDataStore(object):
             rD = self.__deserialize()
             for k, v in uDict.iteritems():
                 rD[k] = v
-            if 'status' in rD:
-                logger.debug("Updating status value %r", rD['status'])
+            if "status" in rD:
+                logger.debug("Updating status value %r", rD["status"])
             return self.__serialize(rD)
         except Exception as e:
             logger.exception("Failure for uDict %r %r", uDict, str(e))
             return False
 
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def append(self, key, value):
         try:
             rD = self.__deserialize()
@@ -239,7 +240,7 @@ class ServiceDataStore(object):
             logger.exception("Failure for key %r value %r %r", key, value, str(e))
             return False
 
-    @lockutils.synchronized('sessiondatastore.lock', external=True)
+    @lockutils.synchronized("sessiondatastore.lock", external=True)
     def extend(self, key, valueList):
         try:
             rD = self.__deserialize()

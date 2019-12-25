@@ -27,12 +27,14 @@ __version__ = "V0.07"
 # import os
 # import sys
 import time
+
 # import types
 # import string
 # import traceback
 # import ntpath
 
 import logging
+
 #
 from wwpdb.utils.config.ConfigInfo import ConfigInfo
 from wwpdb.utils.ws_utils.ServiceDataStore import ServiceDataStore
@@ -45,7 +47,6 @@ logger = logging.getLogger()
 
 
 class ServiceWorkerBase(object):
-
     def __init__(self, reqObj=None, sessionDataPrefix=None):
         """
          Base class supporting web application worker methods.
@@ -64,7 +65,7 @@ class ServiceWorkerBase(object):
         self._cI = ConfigInfo(self._siteId)
         #
         #  ServiceDataStore prefix for general session data -- used by _getSession()
-        self._sdsPrefix = sessionDataPrefix if sessionDataPrefix else 'general'
+        self._sdsPrefix = sessionDataPrefix if sessionDataPrefix else "general"
         self._sds = None
         #
         # Service items include:
@@ -79,8 +80,8 @@ class ServiceWorkerBase(object):
         :param dictionary params:  optional key-value payload stored with status record.
 
         """
-        if params and 'remote_addr' not in params:
-            params['remote_addr'] = self._reqObj.getValue("remote_addr")
+        if params and "remote_addr" not in params:
+            params["remote_addr"] = self._reqObj.getValue("remote_addr")
         #
         sH = ServiceHistory(historyPath=self._reqObj.getSessionUserPath())
         return sH.add(sessionId=self._sessionId, statusOp=op, **params)
@@ -115,7 +116,7 @@ class ServiceWorkerBase(object):
             if requestPath not in self.__appPathD:
                 # bail out if operation is unknown -
                 sst = ServiceSessionState()
-                sst.setServiceError(msg='Unknown operation')
+                sst.setServiceError(msg="Unknown operation")
             else:
                 mth = getattr(self, self.__appPathD[requestPath], None)
                 sst = mth()
@@ -123,7 +124,7 @@ class ServiceWorkerBase(object):
         except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("FAILING for requestPath %r ", requestPath)
             sst = ServiceSessionState()
-            sst.setServiceError(msg='Operation failure')
+            sst.setServiceError(msg="Operation failure")
 
         return sst
 
@@ -166,7 +167,7 @@ class ServiceWorkerBase(object):
     def _trackSessionHistory(self, msg="ok"):
         rP = self._reqObj.getRequestPath()
         tS = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        self._sds.append('session_history', (rP, tS, msg))
+        self._sds.append("session_history", (rP, tS, msg))
 
     def _getSession(self, new=False, useContext=False, contextOverWrite=True, trackHistory=True):
         """ Join existing session or create new session as required.
@@ -184,14 +185,15 @@ class ServiceWorkerBase(object):
                 return False
             self._rltvSessionPath = self._sObj.getRelativePath()
             self._sds = ServiceDataStore(sessionPath=self._sessionPath, prefix=self._sdsPrefix)
-            if (useContext and not new):
+            if useContext and not new:
                 dd = self._getSessionStoreDict()
                 logging.debug("Imported %r", dd)
                 self._reqObj.setDictionary(dd, overWrite=contextOverWrite)
             if trackHistory:
-                self._trackSessionHistory(msg='begins')
+                self._trackSessionHistory(msg="begins")
             return True
         except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("FAILING create or joining session")
         return False
+
     ##

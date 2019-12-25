@@ -37,6 +37,7 @@ import jwt
 from oslo_concurrency import lockutils
 
 import logging
+
 #
 from wwpdb.utils.config.ConfigInfo import ConfigInfo
 
@@ -44,7 +45,6 @@ logger = logging.getLogger()
 
 
 class TokenUtilsBase(object):
-
     def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
         """
          Base class supporting application token management in persistent store.
@@ -55,18 +55,18 @@ class TokenUtilsBase(object):
         self._cI = ConfigInfo(siteId)
         #
         if tokenPrefix is not None:
-            fn = tokenPrefix + '_TOKEN_STORE.pic'
+            fn = tokenPrefix + "_TOKEN_STORE.pic"
         else:
-            fn = 'ANONYMOUSWS_TOKEN_STORE.pic'
+            fn = "ANONYMOUSWS_TOKEN_STORE.pic"
         #
-        self.__filePath = kwargs.get('site_service_registration_dir_path')
+        self.__filePath = kwargs.get("site_service_registration_dir_path")
         if not self.__filePath:
             self.__filePath = os.path.join(self._cI.get("SITE_SERVICE_REGISTRATION_DIR_PATH"), fn)
         #
         logger.debug("Assigning token store file path %r", self.__filePath)
         self.__lockDirPath = kwargs.get("site_service_registration_lockdir_path")
         if not self.__lockDirPath:
-            self.__lockDirPath = self._cI.get("SITE_SERVICE_REGISTRATION_LOCKDIR_PATH", '.')
+            self.__lockDirPath = self._cI.get("SITE_SERVICE_REGISTRATION_LOCKDIR_PATH", ".")
         #
         self.__tokenD = {}
         self.__emailD = {}
@@ -82,7 +82,7 @@ class TokenUtilsBase(object):
 
     def __parseTokenId(self, tokenId):
         try:
-            pL = tokenId.split('_')
+            pL = tokenId.split("_")
             prefix = pL[0]
             iVal = int(pL[1])
             return (prefix, iVal)
@@ -92,10 +92,10 @@ class TokenUtilsBase(object):
     def getFilePath(self):
         return self.__filePath
 
-    @lockutils.synchronized('tokenutils.serialize-lock', external=True)
+    @lockutils.synchronized("tokenutils.serialize-lock", external=True)
     def serialize(self):
         try:
-            with open(self.__filePath, 'wb') as outfile:
+            with open(self.__filePath, "wb") as outfile:
                 pickle.dump(self.__tokenD, outfile, self.__pickleProtocol)
                 pickle.dump(self.__emailD, outfile, self.__pickleProtocol)
             return True
@@ -105,7 +105,7 @@ class TokenUtilsBase(object):
 
     def deserialize(self):
         try:
-            with open(self.__filePath, 'rb') as outfile:
+            with open(self.__filePath, "rb") as outfile:
                 self.__tokenD = pickle.load(outfile)
                 self.__emailD = pickle.load(outfile)
             logger.debug("Recovered %4d token Ids %4d e-mails", len(self.__tokenD), len(self.__emailD))
@@ -116,19 +116,19 @@ class TokenUtilsBase(object):
 
     def tokenIdExists(self, tokenId):
         try:
-            return (tokenId in self.__tokenD)
+            return tokenId in self.__tokenD
         except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
     def tokenIdEmailExists(self, email):
         try:
-            return (email in self.__emailD)
+            return email in self.__emailD
         except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
-    @lockutils.synchronized('tokenutils.transaction-lock', external=True)
+    @lockutils.synchronized("tokenutils.transaction-lock", external=True)
     def remove(self, tokenId):
         self.serialize()
         try:
@@ -148,9 +148,9 @@ class TokenUtilsBase(object):
 
     def getTokenIdEmail(self, tokenId):
         try:
-            return(self.__tokenD[tokenId]['email'])
+            return self.__tokenD[tokenId]["email"]
         except:  # noqa: E722 pylint: disable=bare-except
-            return ''
+            return ""
 
     def saveTokenId(self, tokenId, email, **kw):
         """
@@ -159,7 +159,7 @@ class TokenUtilsBase(object):
             return False
         try:
 
-            tD = {'email': email}
+            tD = {"email": email}
             tD.update(kw)
             self.__tokenD[tokenId] = tD
             self.__emailD[email] = tokenId
@@ -206,7 +206,6 @@ class TokenUtilsBase(object):
 
 
 class JwtTokenUtils(TokenUtilsBase):
-
     def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
         """
         Token utilities for registration webservice
@@ -221,15 +220,15 @@ class JwtTokenUtils(TokenUtilsBase):
         self.__tokenErrorCode = 401
 
     def parseAuth(self, authHeader):
-        rD = {'errorCode': None, 'errorMessage': None, 'token': None, 'errorFlag': False}
+        rD = {"errorCode": None, "errorMessage": None, "token": None, "errorFlag": False}
         parts = authHeader.split()
-        if parts[0].lower() != 'bearer':
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMessage': 'Authorization header must start with Bearer', 'errorFlag': True}
+        if parts[0].lower() != "bearer":
+            rD = {"errorCode": self.__tokenErrorCode, "errorMessage": "Authorization header must start with Bearer", "errorFlag": True}
         elif len(parts) == 1:
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMessage': 'API access token not found', 'errorFlag': True}
+            rD = {"errorCode": self.__tokenErrorCode, "errorMessage": "API access token not found", "errorFlag": True}
         elif len(parts) > 2:
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMesage': 'Authorization header must be Bearer token', 'errorFlag': True}
-        rD['token'] = parts[1]
+            rD = {"errorCode": self.__tokenErrorCode, "errorMesage": "Authorization header must be Bearer token", "errorFlag": True}
+        rD["token"] = parts[1]
         return rD
 
     def parseToken(self, token):
@@ -246,15 +245,15 @@ class JwtTokenUtils(TokenUtilsBase):
         jwtToken = self.__create_token(tokenId, self.__serviceKey, expireDays=expireDays)
         return tokenId, jwtToken
 
-    def __create_token(self, tokenId, secretKey, expireDays=30, algorithm='HS256', encoding='utf-8'):
+    def __create_token(self, tokenId, secretKey, expireDays=30, algorithm="HS256", encoding="utf-8"):
         payload = {
             #        using the standard JWT claim keys --
             # subject id
-            'sub': tokenId,
+            "sub": tokenId,
             # creation datetime
-            'iat': datetime.datetime.utcnow(),
+            "iat": datetime.datetime.utcnow(),
             # expiration datetime
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=expireDays)
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=expireDays),
         }
         token = jwt.encode(payload, secretKey, algorithm=algorithm)
         #
@@ -262,7 +261,7 @@ class JwtTokenUtils(TokenUtilsBase):
         #
         return token.decode(encoding)
 
-    def __parseToken(self, token, secretKey='secretvalue', algorithm='HS256'):
+    def __parseToken(self, token, secretKey="secretvalue", algorithm="HS256"):
         return jwt.decode(token, secretKey, algorithms=algorithm)
 
     def __getTokenData(self, token):
@@ -273,28 +272,27 @@ class JwtTokenUtils(TokenUtilsBase):
         tokenData = {}
         #
         if token is None:
-            errorMessage = 'Missing token'
+            errorMessage = "Missing token"
         try:
             tokenData = self.__parseToken(token, secretKey=self.__serviceKey)
         except jwt.DecodeError:
-            errorMessage = 'API access token is invalid'
+            errorMessage = "API access token is invalid"
             errorCode = self.__tokenErrorCode
         except jwt.ExpiredSignature:
-            errorMessage = 'API access token has expired'
+            errorMessage = "API access token has expired"
             errorCode = self.__tokenErrorCode
         except:  # noqa: E722 pylint: disable=bare-except
-            errorMessage = 'API access token processing error'
+            errorMessage = "API access token processing error"
             errorCode = self.__tokenErrorCode
 
-        tokenData['errorCode'] = errorCode
-        tokenData['errorMessage'] = errorMessage
-        tokenData['errorFlag'] = errorMessage is not None
+        tokenData["errorCode"] = errorCode
+        tokenData["errorMessage"] = errorMessage
+        tokenData["errorFlag"] = errorMessage is not None
 
         return tokenData
 
 
 class JwtTokenReader(object):
-
     def __init__(self, siteId=None):
         """
         Limited set of token methods required to read and validate a JWT tokens.
@@ -306,15 +304,15 @@ class JwtTokenReader(object):
         self.__tokenErrorCode = 401
 
     def parseAuth(self, authHeader):
-        rD = {'errorCode': None, 'errorMessage': None, 'token': None, 'errorFlag': False}
+        rD = {"errorCode": None, "errorMessage": None, "token": None, "errorFlag": False}
         parts = authHeader.split()
-        if parts[0].lower() != 'bearer':
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMessage': 'Authorization header must start with Bearer', 'errorFlag': True}
+        if parts[0].lower() != "bearer":
+            rD = {"errorCode": self.__tokenErrorCode, "errorMessage": "Authorization header must start with Bearer", "errorFlag": True}
         elif len(parts) == 1:
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMessage': 'API access token not found', 'errorFlag': True}
+            rD = {"errorCode": self.__tokenErrorCode, "errorMessage": "API access token not found", "errorFlag": True}
         elif len(parts) > 2:
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMesage': 'Authorization header must be Bearer token', 'errorFlag': True}
-        rD['token'] = parts[1]
+            rD = {"errorCode": self.__tokenErrorCode, "errorMesage": "Authorization header must be Bearer token", "errorFlag": True}
+        rD["token"] = parts[1]
         return rD
 
     def parseToken(self, token):
@@ -322,7 +320,7 @@ class JwtTokenReader(object):
         """
         return self.__getTokenData(token)
 
-    def __parseToken(self, token, secretKey='secretvalue', algorithm='HS256'):
+    def __parseToken(self, token, secretKey="secretvalue", algorithm="HS256"):
         return jwt.decode(token, secretKey, algorithms=algorithm)
 
     def __getTokenData(self, token):
@@ -333,21 +331,21 @@ class JwtTokenReader(object):
         tokenData = {}
         #
         if token is None:
-            errorMessage = 'Missing token'
+            errorMessage = "Missing token"
         try:
             tokenData = self.__parseToken(token, secretKey=self.__serviceKey)
         except jwt.DecodeError:
-            errorMessage = 'API access token is invalid'
+            errorMessage = "API access token is invalid"
             errorCode = self.__tokenErrorCode
         except jwt.ExpiredSignature:
-            errorMessage = 'API access token has expired'
+            errorMessage = "API access token has expired"
             errorCode = self.__tokenErrorCode
         except:  # noqa: E722 pylint: disable=bare-except
-            errorMessage = 'API access token processing error'
+            errorMessage = "API access token processing error"
             errorCode = self.__tokenErrorCode
 
-        tokenData['errorCode'] = errorCode
-        tokenData['errorMessage'] = errorMessage
-        tokenData['errorFlag'] = errorMessage is not None
+        tokenData["errorCode"] = errorCode
+        tokenData["errorMessage"] = errorMessage
+        tokenData["errorFlag"] = errorMessage is not None
 
         return tokenData

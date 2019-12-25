@@ -37,31 +37,31 @@ from email.utils import formatdate
 
 
 import logging
+
 logger = logging.getLogger()
 
 
 class ServiceSmtpUtils(object):
-
     def __init__(self):
         """  Collection of mail handling methods -
         """
 
-    def sendFile(self, srcPath, toAddr, fromAddr, subject, replyAddr='noreply@mail.wwpdb.org'):
+    def sendFile(self, srcPath, toAddr, fromAddr, subject, replyAddr="noreply@mail.wwpdb.org"):
         """ Internal method to mail file as text.
 
         Reply-To: noreply@example.com
         """
 
         # Create a text/plain message
-        fp = open(srcPath, 'rb')
+        fp = open(srcPath, "rb")
         msg = MIMEText(fp.read())
         fp.close()
         #
-        msg['Subject'] = subject
-        msg['From'] = fromAddr
-        msg['To'] = toAddr
+        msg["Subject"] = subject
+        msg["From"] = fromAddr
+        msg["To"] = toAddr
         if replyAddr is not None:
-            msg['reply-to'] = replyAddr
+            msg["reply-to"] = replyAddr
 
         #
         s = smtplib.SMTP()
@@ -74,28 +74,28 @@ class ServiceSmtpUtils(object):
         """
 
         msg = MIMEMultipart()
-        msg['From'] = fromAddr
-        msg['To'] = toAddr
-        msg['Date'] = formatdate(localtime=True)
-        msg['Subject'] = subject
+        msg["From"] = fromAddr
+        msg["To"] = toAddr
+        msg["Date"] = formatdate(localtime=True)
+        msg["Subject"] = subject
         if replyAddr:
-            msg['reply-to'] = replyAddr
+            msg["reply-to"] = replyAddr
         #
         msg.attach(MIMEText(text))
 
         for file in fileList or []:
-            part = MIMEBase('application', "octet-stream")
+            part = MIMEBase("application", "octet-stream")
             with open(file, "rb") as infile:
                 part.set_payload(infile.read())
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(file))
+            part.add_header("Content-Disposition", 'attachment; filename="%s"' % os.path.basename(file))
             msg.attach(part)
         #
         if textAsAttachment:
-            part = MIMEBase('application', "octet-stream")
+            part = MIMEBase("application", "octet-stream")
             part.set_payload(textAsAttachment)
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % textAttachmentName)
+            part.add_header("Content-Disposition", 'attachment; filename="%s"' % textAttachmentName)
             msg.attach(part)
         #
         try:
@@ -114,19 +114,19 @@ class ServiceSmtpUtils(object):
         """
 
         msg = MIMEMultipart()
-        msg['From'] = fromAddr
-        msg['To'] = toAddr
-        msg['Date'] = formatdate(localtime=True)
-        msg['Subject'] = subject
-        msg['reply-to'] = replyAddr
+        msg["From"] = fromAddr
+        msg["To"] = toAddr
+        msg["Date"] = formatdate(localtime=True)
+        msg["Subject"] = subject
+        msg["reply-to"] = replyAddr
         #
         msg.attach(MIMEText(text))
 
         if textAsAttachment:
-            part = MIMEBase('application', "octet-stream")
+            part = MIMEBase("application", "octet-stream")
             part.set_payload(textAsAttachment)
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(textFileName))
+            part.add_header("Content-Disposition", 'attachment; filename="%s"' % os.path.basename(textFileName))
             msg.attach(part)
         #
         try:

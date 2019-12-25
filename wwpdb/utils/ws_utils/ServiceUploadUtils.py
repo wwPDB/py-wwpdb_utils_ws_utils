@@ -44,7 +44,7 @@ class ServiceUploadUtils(object):
         logger.debug(" - session id   %s\n", self.__sessionObj.getId())
         logger.debug(" - session path %s\n", self.__sessionPath)
 
-    def isFileUpload(self, fileTag='file'):
+    def isFileUpload(self, fileTag="file"):
         """ Generic check for the existence of request paramenter "fileTag=".
         """
         # Gracefully exit if no file is provide in the request object -
@@ -52,14 +52,14 @@ class ServiceUploadUtils(object):
 
         logger.debug("+WebUploadUtils.isFileUpLoad() fs  %r", fs)
         if sys.version_info[0] < 3:
-            if ((fs is None) or (isinstance(fs, types.StringType)) or (isinstance(fs, types.UnicodeType))):  # noqa: E722 pylint: disable=no-member
+            if (fs is None) or (isinstance(fs, types.StringType)) or (isinstance(fs, types.UnicodeType)):  # noqa: E722 pylint: disable=no-member
                 return False
         else:
-            if ((fs is None) or (isinstance(fs, str)) or (isinstance(fs, bytes))):
+            if (fs is None) or (isinstance(fs, str)) or (isinstance(fs, bytes)):
                 return False
         return True
 
-    def getUploadFileName(self, fileTag='file'):
+    def getUploadFileName(self, fileTag="file"):
         """  Get the user supplied name of for the uploaded file -
         """
         #
@@ -74,7 +74,7 @@ class ServiceUploadUtils(object):
             formRequestFileName = str(fs.filename).strip()
 
             #
-            if (formRequestFileName.find('\\') != -1):
+            if formRequestFileName.find("\\") != -1:
                 uploadInputFileName = ntpath.basename(formRequestFileName)
             else:
                 uploadInputFileName = os.path.basename(formRequestFileName)
@@ -87,7 +87,7 @@ class ServiceUploadUtils(object):
 
         return None
 
-    def copyToSession(self, fileTag='file', sessionFileName=None, uncompress=True):
+    def copyToSession(self, fileTag="file", sessionFileName=None, uncompress=True):
         """  Copy uploaded file identified form element name 'fileTag' to the current session directory.
 
              File is copied to user uploaded file or to the sessionFileName if this is provided.
@@ -103,7 +103,7 @@ class ServiceUploadUtils(object):
             formRequestFileName = str(fs.filename).strip()
 
             #
-            if (formRequestFileName.find('\\') != -1):
+            if formRequestFileName.find("\\") != -1:
                 uploadInputFileName = ntpath.basename(formRequestFileName)
             else:
                 uploadInputFileName = os.path.basename(formRequestFileName)
@@ -123,10 +123,10 @@ class ServiceUploadUtils(object):
             logger.debug("- session target file path   %s", sessionInputFilePath)
             logger.debug("- session target file name   %s", sessionInputFileName)
             #
-            with open(sessionInputFilePath, 'wb') as outfile:
+            with open(sessionInputFilePath, "wb") as outfile:
                 outfile.write(fs.file.read())
             #
-            if (uncompress and sessionInputFilePath.endswith(".gz")):
+            if uncompress and sessionInputFilePath.endswith(".gz"):
 
                 logger.debug("-uncompressing file %s", str(sessionInputFilePath))
                 self.__copyGzip(sessionInputFilePath, sessionInputFilePath[:-3])
@@ -141,7 +141,7 @@ class ServiceUploadUtils(object):
 
     def renameSessionFile(self, srcFileName, dstFileName):
         try:
-            if (srcFileName != dstFileName):
+            if srcFileName != dstFileName:
                 srcPath = os.path.join(self.__sessionPath, srcFileName)
                 dstPath = os.path.join(self.__sessionPath, dstFileName)
                 shutil.copyfile(srcPath, dstPath)
@@ -162,13 +162,13 @@ class ServiceUploadUtils(object):
             return fExt
 
         try:
-            fL = str(fileName).split('.')
+            fL = str(fileName).split(".")
             if len(fL) < 2:
                 return fExt
 
             if ignoreVersion and len(fL) > 2:
                 tExt = fL[-1]
-                if ((tExt.startswith('V') or tExt.startswith('v')) and tExt[1:].isdigit()):
+                if (tExt.startswith("V") or tExt.startswith("v")) and tExt[1:].isdigit():
                     fExt = fL[-2]
                 else:
                     fExt = tExt
@@ -193,19 +193,19 @@ class ServiceUploadUtils(object):
 
         (head, _tail) = os.path.splitext(str(fileName))
         headLC = head.upper()
-        if headLC.startswith('RCSB'):
+        if headLC.startswith("RCSB"):
             fId = head
-            fType = 'RCSB'
-        elif headLC.startswith('D_'):
+            fType = "RCSB"
+        elif headLC.startswith("D_"):
             fId = head
             fType = "WF_ARCHIVE"
             #
             # Look for
             #
-            fields = head.split('_')
+            fields = head.split("_")
             if len(fields) > 1:
-                fId = '_'.join(fields[:2])
-        elif headLC.startswith('W_'):
+                fId = "_".join(fields[:2])
+        elif headLC.startswith("W_"):
             fId = head
             fType = "WF_INSTANCE"
         else:

@@ -16,6 +16,7 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 import logging
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -34,6 +35,7 @@ logger = logging.getLogger()
 class ServiceHistory(object):
     """ Methods to manage service session history tracking
     """
+
     #
 
     def __init__(self, historyPath, useUTC=False):
@@ -58,7 +60,7 @@ class ServiceHistory(object):
             logger.exception("FAILING for filePath %r", self.__filePath)
 
     #
-    def __serialize(self, iD, mode='wb'):
+    def __serialize(self, iD, mode="wb"):
         """ Internal method to write session history data to persistent store.
         """
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
@@ -82,15 +84,15 @@ class ServiceHistory(object):
             except:  # noqa: E722 pylint: disable=bare-except
                 pass
             try:
-                with open(self.__filePath, 'rb') as fb:
+                with open(self.__filePath, "rb") as fb:
                     while True:
                         # process each record and quit at eof
                         try:
                             d = pickle.load(fb)
                             # logger.info("Read activity record %r" % d)
-                            if d['sid'] not in rD:
-                                rD[d['sid']] = {}
-                            rD[d['sid']][d['op']] = d['data']
+                            if d["sid"] not in rD:
+                                rD[d["sid"]] = {}
+                            rD[d["sid"]][d["op"]] = d["data"]
                         except EOFError:
                             break
             except:  # noqa: E722 pylint: disable=bare-except
@@ -112,10 +114,10 @@ class ServiceHistory(object):
         if params:
             dd = copy.deepcopy(params)
         if self.__useUtc:
-            dd['tiso'] = datetime.datetime.utcnow().isoformat()
+            dd["tiso"] = datetime.datetime.utcnow().isoformat()
         else:
-            dd['tiso'] = datetime.datetime.now().isoformat()
-        tD = {'sid': sessionId, 'op': statusOp, 'data': dd}
+            dd["tiso"] = datetime.datetime.now().isoformat()
+        tD = {"sid": sessionId, "op": statusOp, "data": dd}
         #
         return self.__serialize(tD, mode="a+b")
 
@@ -142,25 +144,25 @@ class ServiceHistory(object):
             for sId in tD:
                 sD = tD[sId]
                 deltaSeconds = 0
-                if 'created' in sD:
+                if "created" in sD:
                     sessionCount += 1
-                    tStart = sD['created']['tiso']
-                    st = 'created'
-                if 'submitted' in sD:
+                    tStart = sD["created"]["tiso"]
+                    st = "created"
+                if "submitted" in sD:
                     submittedCount += 1
-                    tBegin = sD['submitted']['tiso']
-                    st = 'submitted'
+                    tBegin = sD["submitted"]["tiso"]
+                    st = "submitted"
                     #
-                    if 'failed' in sD:
+                    if "failed" in sD:
                         failedCount += 1
-                        tEnd = sD['failed']['tiso']
-                        st = 'failed'
+                        tEnd = sD["failed"]["tiso"]
+                        st = "failed"
                         dt = dateutil.parser.parse(tEnd) - dateutil.parser.parse(tBegin)
                         deltaSeconds = dt.total_seconds()
-                    if 'completed' in sD:
+                    if "completed" in sD:
                         completedCount += 1
-                        tEnd = sD['completed']['tiso']
-                        st = 'completed'
+                        tEnd = sD["completed"]["tiso"]
+                        st = "completed"
                         dt = dateutil.parser.parse(tEnd) - dateutil.parser.parse(tBegin)
                         deltaSeconds = dt.total_seconds()
 
@@ -170,9 +172,9 @@ class ServiceHistory(object):
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("summary construction failing")
         #
-        rD['session_count'] = sessionCount
-        rD['submitted_count'] = submittedCount
-        rD['failed_count'] = failedCount
-        rD['completed_count'] = completedCount
-        rD['session_list'] = ssL
+        rD["session_count"] = sessionCount
+        rD["submitted_count"] = submittedCount
+        rD["failed_count"] = failedCount
+        rD["completed_count"] = completedCount
+        rD["session_list"] = ssL
         return rD

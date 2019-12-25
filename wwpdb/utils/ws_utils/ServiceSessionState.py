@@ -23,6 +23,7 @@ logger = logging.getLogger()
 class ServiceSessionState(object):
     """Accessors to encapsulate common service session details --
     """
+
     #
 
     def __init__(self):
@@ -30,9 +31,9 @@ class ServiceSessionState(object):
         """
         #
         self.__D = {}
-        self.__strKeyList = ['servicename', 'serviceargs', 'statustext', 'errormessage', 'warningmessage', 'responseformat']
+        self.__strKeyList = ["servicename", "serviceargs", "statustext", "errormessage", "warningmessage", "responseformat"]
         #
-        self.__boolKeyList = ['errorflag', 'warningflag']
+        self.__boolKeyList = ["errorflag", "warningflag"]
         self.clear()
         #
         #  Containers for variable application data and files details-
@@ -41,6 +42,7 @@ class ServiceSessionState(object):
         self.__dFL = []
         #
         self.clear()
+
     #
 
     def clear(self):
@@ -49,14 +51,14 @@ class ServiceSessionState(object):
         self.__dFL = []
         self.__D = {}
         for ky in self.__strKeyList:
-            self.__D[ky] = ''
+            self.__D[ky] = ""
         for ky in self.__boolKeyList:
             self.__D[ky] = False
 
-    def setAppDataDict(self, dictval, errFlag=False, format='json'):  # pylint: disable=redefined-builtin
+    def setAppDataDict(self, dictval, errFlag=False, format="json"):  # pylint: disable=redefined-builtin
         try:
-            self.__D['responseformat'] = format
-            self.__D['errorflag'] = errFlag
+            self.__D["responseformat"] = format
+            self.__D["errorflag"] = errFlag
             for k, v in dictval.items():
                 self.__A[k] = v
             return True
@@ -82,7 +84,7 @@ class ServiceSessionState(object):
     def setDownload(self, fileName, filePath, contentType=None, md5Digest=None):
         try:
             self.__dFL.append((fileName, filePath, contentType, md5Digest))
-            self.__D['responseformat'] = 'files'
+            self.__D["responseformat"] = "files"
             return True
         except:  # noqa: E722 pylint: disable=bare-except
             return False
@@ -107,67 +109,69 @@ class ServiceSessionState(object):
             logging.exception("FAILING")
             return False
 
-    def setResponseFormat(self, format='json'):  # pylint: disable=redefined-builtin
-        self.__D['responseformat'] = format
+    def setResponseFormat(self, format="json"):  # pylint: disable=redefined-builtin
+        self.__D["responseformat"] = format
 
     def getResponseFormat(self):
-        return self.__D['responseformat']
+        return self.__D["responseformat"]
 
     def setServiceName(self, name):
-        self.__D['servicename'] = name
+        self.__D["servicename"] = name
 
     def getServiceName(self):
-        return self.__D['servicename']
+        return self.__D["servicename"]
 
     def setServiceArgs(self, val):
-        self.__D['serviceargs'] = val
+        self.__D["serviceargs"] = val
 
     def getServiceArgs(self):
-        return self.__D['serviceargs']
+        return self.__D["serviceargs"]
 
     def setServiceStatusText(self, msg):
-        self.__D['statustext'] = msg
+        self.__D["statustext"] = msg
 
     def getServiceStatusText(self):
-        return self.__D['statustext']
+        return self.__D["statustext"]
 
     def setServiceCompletionFlag(self, boolFlag):
-        self.__D['errorflag'] = not boolFlag
+        self.__D["errorflag"] = not boolFlag
 
     #
-    def setServiceError(self, msg, errFlag=True, format='json'):  # pylint: disable=redefined-builtin
-        self.__D['errorflag'] = errFlag
-        self.__D['errormessage'] = msg
-        self.__D['responseformat'] = format
+    def setServiceError(self, msg, errFlag=True, format="json"):  # pylint: disable=redefined-builtin
+        self.__D["errorflag"] = errFlag
+        self.__D["errormessage"] = msg
+        self.__D["responseformat"] = format
+
     #
 
-    def setServiceWarning(self, msg, warnFlag=True, format='json'):  # pylint: disable=redefined-builtin
-        self.__D['warningflag'] = warnFlag
-        self.__D['warningmessage'] = msg
-        self.__D['responseformat'] = format
+    def setServiceWarning(self, msg, warnFlag=True, format="json"):  # pylint: disable=redefined-builtin
+        self.__D["warningflag"] = warnFlag
+        self.__D["warningmessage"] = msg
+        self.__D["responseformat"] = format
 
     def setServiceErrorFlag(self, boolFlag):
-        self.__D['errorflag'] = boolFlag
+        self.__D["errorflag"] = boolFlag
 
     def getServiceErrorFlag(self):
-        return self.__D['errorflag']
+        return self.__D["errorflag"]
 
     def setServiceWarningFlag(self, boolFlag):
-        self.__D['warningflag'] = boolFlag
+        self.__D["warningflag"] = boolFlag
 
     def getServiceWarningFlag(self):
-        return self.__D['warningflag']
+        return self.__D["warningflag"]
 
     def setServiceErrorMessage(self, msg):
-        self.__D['errormessage'] = msg
+        self.__D["errormessage"] = msg
 
     def getServiceErrorMessage(self):
-        return self.__D['errormessage']
+        return self.__D["errormessage"]
 
     def setServiceWarningMessage(self, msg):
-        self.__D['warningmessage'] = msg
+        self.__D["warningmessage"] = msg
 
     def getServiceWarningMessage(self):
-        return self.__D['warningmessage']
+        return self.__D["warningmessage"]
+
 
 #
