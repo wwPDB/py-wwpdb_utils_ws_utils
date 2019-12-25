@@ -13,7 +13,6 @@ Class implementing a cross-platform file locking strategy using an auxiliary loc
 """
 
 import os
-import sys
 import time
 import errno
 import logging
@@ -53,6 +52,7 @@ class ServiceLockFile(object):
         self.__timeoutSeconds = timeoutSeconds
         self.__retrySeconds = retrySeconds
         self.__debug = True
+        self.__fd = None
         #
 
     def acquire(self):
@@ -68,7 +68,7 @@ class ServiceLockFile(object):
             try:
                 self.__fd = os.open(self.__lockFilePath, os.O_CREAT | os.O_EXCL | os.O_RDWR)
                 if self.__debug:
-                    logger.debug("Lock file created %s" % self.__lockFilePath)
+                    logger.debug("Lock file created %s", self.__lockFilePath)
                 break
             except OSError as myErr:
                 if myErr.errno != errno.EEXIST:
@@ -76,11 +76,11 @@ class ServiceLockFile(object):
                     raise
                 # handle timeout and retry -
                 if (time.time() - timeBegin) >= self.__timeoutSeconds:
-                    logger.debug("ServiceLockfile(acquire) Failed to acquire lock within timeout %r" % self.__timeoutSeconds)
+                    logger.debug("ServiceLockfile(acquire) Failed to acquire lock within timeout %r", self.__timeoutSeconds)
                     raise LockFileTimeoutException("ServiceLockFile(acquire) Internal timeout of %d (seconds) exceeded for %s" %
                                                    (self.__timeoutSeconds, self.__filePath))
                 if self.__debug:
-                    logger.debug("Lock file retry for file %s" % self.__lockFilePath)
+                    logger.debug("Lock file retry for file %s", self.__lockFilePath)
                 time.sleep(self.__retrySeconds)
         #
         self.__isLocked = True
@@ -93,7 +93,7 @@ class ServiceLockFile(object):
             os.unlink(self.__lockFilePath)
             self.__isLocked = False
             if self.__debug:
-                logger.debug("LockFile(release) removed lock file %s" % self.__lockFilePath)
+                logger.debug("LockFile(release) removed lock file %s", self.__lockFilePath)
 
     def __enter__(self):
         """ Internal method invoked at the beginning of a 'with' clause.
@@ -102,7 +102,7 @@ class ServiceLockFile(object):
             self.acquire()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         """ Internal method invoked at the end of a 'with' clause.
         """
         if self.__isLocked:
@@ -112,6 +112,7 @@ class ServiceLockFile(object):
         """ Internal method to cleanup any lingering lock file.
         """
         self.release()
+
 
 if __name__ == "__main__":
     pass

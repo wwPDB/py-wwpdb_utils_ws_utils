@@ -20,13 +20,11 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.09"
 
 import sys
-
 import ntpath
 import os
 import types
 import shutil
 import logging
-import hashlib
 
 logger = logging.getLogger()
 
@@ -43,8 +41,8 @@ class ServiceUploadUtils(object):
         self.__sessionObj = self.__reqObj.getSessionObj()
         self.__sessionPath = self.__sessionObj.getPath()
         #
-        logger.debug(" - session id   %s\n" % (self.__sessionObj.getId()))
-        logger.debug(" - session path %s\n" % (self.__sessionPath))
+        logger.debug(" - session id   %s\n", self.__sessionObj.getId())
+        logger.debug(" - session path %s\n", self.__sessionPath)
 
     def isFileUpload(self, fileTag='file'):
         """ Generic check for the existence of request paramenter "fileTag=".
@@ -52,25 +50,27 @@ class ServiceUploadUtils(object):
         # Gracefully exit if no file is provide in the request object -
         fs = self.__reqObj.getRawValue(fileTag)
 
-        logger.debug("+WebUploadUtils.isFileUpLoad() fs  %r\n" % fs)
-
-        if ((fs is None) or (isinstance(fs, types.StringType)) or (isinstance(fs, types.UnicodeType))):
-            return False
+        logger.debug("+WebUploadUtils.isFileUpLoad() fs  %r", fs)
+        if sys.version_info[0] < 3:
+            if ((fs is None) or (isinstance(fs, types.StringType)) or (isinstance(fs, types.UnicodeType))):  # noqa: E722 pylint: disable=no-member
+                return False
+        else:
+            if ((fs is None) or (isinstance(fs, str)) or (isinstance(fs, bytes))):
+                return False
         return True
-
 
     def getUploadFileName(self, fileTag='file'):
         """  Get the user supplied name of for the uploaded file -
         """
         #
 
-        logger.debug("operation started\n")
+        logger.debug("operation started")
         #
         try:
             fs = self.__reqObj.getRawValue(fileTag)
 
-            logger.debug("- upload file descriptor fs =     %r\n" % fs)
-            logger.debug("- upload file descriptor fs =     %s\n" % fs)
+            logger.debug("- upload file descriptor fs =     %r", fs)
+            logger.debug("- upload file descriptor fs =     %s", fs)
             formRequestFileName = str(fs.filename).strip()
 
             #
@@ -79,10 +79,10 @@ class ServiceUploadUtils(object):
             else:
                 uploadInputFileName = os.path.basename(formRequestFileName)
 
-            logger.debug(" uploaded file name %s\n" % str(uploadInputFileName))
+            logger.debug(" uploaded file name %s", str(uploadInputFileName))
             #
             return uploadInputFileName
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("+WebUploadUtils.getUploadFileName() processing failed")
 
         return None
@@ -93,12 +93,12 @@ class ServiceUploadUtils(object):
              File is copied to user uploaded file or to the sessionFileName if this is provided.
         """
         #
-        logger.debug("- operation started\n")
+        logger.debug("- operation started")
         #
         try:
             fs = self.__reqObj.getRawValue(fileTag)
 
-            logger.debug("- upload file descriptor fs =     %r\n" % fs)
+            logger.debug("- upload file descriptor fs =     %r\n", fs)
             # formRequestFileName = str(fs.filename).strip().lower()
             formRequestFileName = str(fs.filename).strip()
 
@@ -118,24 +118,24 @@ class ServiceUploadUtils(object):
 
             sessionInputFilePath = os.path.join(self.__sessionPath, sessionInputFileName)
 
-            logger.debug("- user request file name     %s" % fs.filename)
-            logger.debug("- upload input file name     %s" % uploadInputFileName)
-            logger.debug("- session target file path   %s" % sessionInputFilePath)
-            logger.debug("- session target file name   %s" % sessionInputFileName)
+            logger.debug("- user request file name     %s", fs.filename)
+            logger.debug("- upload input file name     %s", uploadInputFileName)
+            logger.debug("- session target file path   %s", sessionInputFilePath)
+            logger.debug("- session target file name   %s", sessionInputFileName)
             #
             with open(sessionInputFilePath, 'wb') as outfile:
                 outfile.write(fs.file.read())
             #
             if (uncompress and sessionInputFilePath.endswith(".gz")):
 
-                logger.debug("-uncompressing file %s" % str(sessionInputFilePath))
+                logger.debug("-uncompressing file %s", str(sessionInputFilePath))
                 self.__copyGzip(sessionInputFilePath, sessionInputFilePath[:-3])
                 sessionInputFileName = sessionInputFileName[:-3]
 
-            logger.debug("Uploaded file %s" % str(sessionInputFileName))
+            logger.debug("Uploaded file %s", str(sessionInputFileName))
             #
             return sessionInputFileName
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("File upload processing failed")
         return None
 
@@ -146,7 +146,7 @@ class ServiceUploadUtils(object):
                 dstPath = os.path.join(self.__sessionPath, dstFileName)
                 shutil.copyfile(srcPath, dstPath)
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def getFileExtension(self, fileName, ignoreVersion=False):
@@ -175,7 +175,7 @@ class ServiceUploadUtils(object):
             else:
                 if len(fL) > 1:
                     fExt = fL[-1]
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
 
         return fExt
@@ -191,7 +191,7 @@ class ServiceUploadUtils(object):
         if fileName is None or len(fileName) < 1:
             return fId, fType
 
-        (head, tail) = os.path.splitext(str(fileName))
+        (head, _tail) = os.path.splitext(str(fileName))
         headLC = head.upper()
         if headLC.startswith('RCSB'):
             fId = head
@@ -212,9 +212,9 @@ class ServiceUploadUtils(object):
             fId = head
             fType = "UNKNOWN"
 
-            logger.debug("using non-standard identifier %r for %r" % (head, str(fileName)))
+            logger.debug("using non-standard identifier %r for %r", head, str(fileName))
 
-        logger.debug("using identifier fId %r and file source %r" % (fId, fType))
+        logger.debug("using identifier fId %r and file source %r", fId, fType)
 
         return fId, fType
 
@@ -225,6 +225,6 @@ class ServiceUploadUtils(object):
             cmd = " gzip -cd  %s > %s " % (inpFilePath, outFilePath)
             os.system(cmd)
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("uncompress failing")
         return False

@@ -14,6 +14,7 @@ __version__ = "V0.07"
 
 import unittest
 
+# pylint: disable=unused-import
 import wwpdb.utils.ws_utils.ServiceDataStore
 import wwpdb.utils.ws_utils.ServiceHistory
 import wwpdb.utils.ws_utils.ServiceLockFile
@@ -25,7 +26,8 @@ import wwpdb.utils.ws_utils.ServiceSmtpUtils
 import wwpdb.utils.ws_utils.ServiceUploadUtils
 import wwpdb.utils.ws_utils.ServiceUtilsMisc
 import wwpdb.utils.ws_utils.ServiceWorkerBase
-import wwpdb.utils.ws_utils.TokenUtils
+import wwpdb.utils.ws_utils.TokenUtils  # noqa: F401
+
 
 class ImportTests(unittest.TestCase):
     def setUp(self):
@@ -33,5 +35,3 @@ class ImportTests(unittest.TestCase):
 
     def testPass(self):
         pass
-
-    

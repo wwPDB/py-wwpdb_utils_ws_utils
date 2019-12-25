@@ -29,9 +29,9 @@ import os
 import datetime
 
 try:
-	import cPickle as pickle
+    import cPickle as pickle
 except ImportError:
-	import pickle
+    import pickle
 
 import jwt
 from oslo_concurrency import lockutils
@@ -63,7 +63,7 @@ class TokenUtilsBase(object):
         if not self.__filePath:
             self.__filePath = os.path.join(self._cI.get("SITE_SERVICE_REGISTRATION_DIR_PATH"), fn)
         #
-        logger.debug("Assigning token store file path %r" % self.__filePath)
+        logger.debug("Assigning token store file path %r", self.__filePath)
         self.__lockDirPath = kwargs.get("site_service_registration_lockdir_path")
         if not self.__lockDirPath:
             self.__lockDirPath = self._cI.get("SITE_SERVICE_REGISTRATION_LOCKDIR_PATH", '.')
@@ -86,7 +86,7 @@ class TokenUtilsBase(object):
             prefix = pL[0]
             iVal = int(pL[1])
             return (prefix, iVal)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return (None, None)
 
     def getFilePath(self):
@@ -99,7 +99,7 @@ class TokenUtilsBase(object):
                 pickle.dump(self.__tokenD, outfile, self.__pickleProtocol)
                 pickle.dump(self.__emailD, outfile, self.__pickleProtocol)
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
         return False
 
@@ -108,23 +108,23 @@ class TokenUtilsBase(object):
             with open(self.__filePath, 'rb') as outfile:
                 self.__tokenD = pickle.load(outfile)
                 self.__emailD = pickle.load(outfile)
-            logger.debug("Recovered %4d token Ids %4d e-mails" % (len(self.__tokenD), len(self.__emailD)))
+            logger.debug("Recovered %4d token Ids %4d e-mails", len(self.__tokenD), len(self.__emailD))
             return True
-        except:
-            logger.debug("Unable to deserialize persistent token store %r" % self.__filePath)
+        except Exception as e:
+            logger.debug("Unable to deserialize persistent token store %r - %r", self.__filePath, str(e))
         return False
 
     def tokenIdExists(self, tokenId):
         try:
             return (tokenId in self.__tokenD)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
     def tokenIdEmailExists(self, email):
         try:
             return (email in self.__emailD)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
@@ -135,12 +135,12 @@ class TokenUtilsBase(object):
             email = self.getTokenIdEmail(tokenId)
             if email in self.__emailD:
                 del self.__emailD[email]
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             self.deserialize()
             return False
         try:
             del self.__tokenD[tokenId]
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             self.deserialize()
             return False
         self.serialize()
@@ -149,7 +149,7 @@ class TokenUtilsBase(object):
     def getTokenIdEmail(self, tokenId):
         try:
             return(self.__tokenD[tokenId]['email'])
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return ''
 
     def saveTokenId(self, tokenId, email, **kw):
@@ -165,7 +165,7 @@ class TokenUtilsBase(object):
             self.__emailD[email] = tokenId
             self.serialize()
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("Token save FAILING")
         return False
 
@@ -175,7 +175,7 @@ class TokenUtilsBase(object):
         """
         try:
             return self.__emailD[email]
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
         #
         #  Create a new tokenId and save -
@@ -194,12 +194,12 @@ class TokenUtilsBase(object):
         try:
             if len(self.__tokenD.keys()) > 0:
                 tokenMax = max(self.__tokenD.keys())
-                pr, iV = self.__parseTokenId(tokenMax)
+                _pr, iV = self.__parseTokenId(tokenMax)
                 iV += 1
             else:
                 iV = 1
             return iV
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
 
         return -1
@@ -228,7 +228,7 @@ class JwtTokenUtils(TokenUtilsBase):
         elif len(parts) == 1:
             rD = {'errorCode': self.__tokenErrorCode, 'errorMessage': 'API access token not found', 'errorFlag': True}
         elif len(parts) > 2:
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMesage': 'Authorization header must be Bearer + \s + token', 'errorFlag': True}
+            rD = {'errorCode': self.__tokenErrorCode, 'errorMesage': 'Authorization header must be Bearer token', 'errorFlag': True}
         rD['token'] = parts[1]
         return rD
 
@@ -282,7 +282,7 @@ class JwtTokenUtils(TokenUtilsBase):
         except jwt.ExpiredSignature:
             errorMessage = 'API access token has expired'
             errorCode = self.__tokenErrorCode
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             errorMessage = 'API access token processing error'
             errorCode = self.__tokenErrorCode
 
@@ -313,7 +313,7 @@ class JwtTokenReader(object):
         elif len(parts) == 1:
             rD = {'errorCode': self.__tokenErrorCode, 'errorMessage': 'API access token not found', 'errorFlag': True}
         elif len(parts) > 2:
-            rD = {'errorCode': self.__tokenErrorCode, 'errorMesage': 'Authorization header must be Bearer + \s + token', 'errorFlag': True}
+            rD = {'errorCode': self.__tokenErrorCode, 'errorMesage': 'Authorization header must be Bearer token', 'errorFlag': True}
         rD['token'] = parts[1]
         return rD
 
@@ -342,7 +342,7 @@ class JwtTokenReader(object):
         except jwt.ExpiredSignature:
             errorMessage = 'API access token has expired'
             errorCode = self.__tokenErrorCode
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             errorMessage = 'API access token processing error'
             errorCode = self.__tokenErrorCode
 

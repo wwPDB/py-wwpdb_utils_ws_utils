@@ -17,9 +17,9 @@ __version__ = "V0.07"
 
 import logging
 try:
-	import cPickle as pickle
+    import cPickle as pickle
 except ImportError:
-	import pickle
+    import pickle
 import os.path
 import copy
 import datetime
@@ -49,37 +49,37 @@ class ServiceHistory(object):
 
     def __setup(self):
         #
-        #self.__pickleProtocol = pickle.HIGHEST_PROTOCOL
+        # self.__pickleProtocol = pickle.HIGHEST_PROTOCOL
         self.__pickleProtocol = 0
         try:
             self.__filePath = os.path.join(self.__historyPath, "history-session-store.pic")
-            logger.debug("Service history data store path %r" % self.__filePath)
-        except:
-            logger.exception("FAILING for filePath %r" % self.__filePath)
+            logger.debug("Service history data store path %r", self.__filePath)
+        except:  # noqa: E722 pylint: disable=bare-except
+            logger.exception("FAILING for filePath %r", self.__filePath)
 
     #
     def __serialize(self, iD, mode='wb'):
         """ Internal method to write session history data to persistent store.
         """
-        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:
+        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
             try:
                 with open(self.__filePath, mode) as fb:
                     pickle.dump(iD, fb, self.__pickleProtocol)
                 return True
-            except:
-                logger.exception("Serialization failure with file %s" % self.__filePath)
+            except:  # noqa: E722 pylint: disable=bare-except
+                logger.exception("Serialization failure with file %s", self.__filePath)
         return False
 
     def __deserialize(self):
         """ Internal method to recover session history data from persistent store.
         """
         rD = {}
-        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:
+        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
             try:
                 if not os.access(self.__filePath, os.R_OK):
-                    logging.warn("No data store in path %r " % self.__filePath)
+                    logging.warning("No data store in path %r ", self.__filePath)
                     return rD
-            except:
+            except:  # noqa: E722 pylint: disable=bare-except
                 pass
             try:
                 with open(self.__filePath, 'rb') as fb:
@@ -93,8 +93,8 @@ class ServiceHistory(object):
                             rD[d['sid']][d['op']] = d['data']
                         except EOFError:
                             break
-            except:
-                logger.exception("Deserialization failure with file %s" % self.__filePath)
+            except:  # noqa: E722 pylint: disable=bare-except
+                logger.exception("Deserialization failure with file %s", self.__filePath)
 
         return rD
 
@@ -167,7 +167,7 @@ class ServiceHistory(object):
                     sL.append((sId, tStart, st, deltaSeconds))
 
             ssL = sorted(sL, key=itemgetter(1))
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("summary construction failing")
         #
         rD['session_count'] = sessionCount

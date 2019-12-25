@@ -28,10 +28,8 @@ import os.path
 
 
 import smtplib
-#import base64
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
-#from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
 from email import encoders
@@ -107,11 +105,11 @@ class ServiceSmtpUtils(object):
             s.sendmail(fromAddr, [toAddr], msg.as_string())
             s.close()
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
         return False
 
-    def emailTextWithAttachment(self, fromAddr, toAddr, replyAddr, subject, text, textAsAttachment=None):
+    def emailTextWithAttachment(self, fromAddr, toAddr, replyAddr, subject, text, textAsAttachment=None, textFileName=None):
         """
         """
 
@@ -128,7 +126,7 @@ class ServiceSmtpUtils(object):
             part = MIMEBase('application', "octet-stream")
             part.set_payload(textAsAttachment)
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(file))
+            part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(textFileName))
             msg.attach(part)
         #
         try:
@@ -138,6 +136,6 @@ class ServiceSmtpUtils(object):
             s.sendmail(fromAddr, [toAddr], msg.as_string())
             s.close()
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
         return False

@@ -38,11 +38,13 @@ class ServiceRequestBase(object):
     """ Base container and accessors for input and output parameters and control information.
     """
 
-    def __init__(self, paramDict={}):
+    def __init__(self, paramDict=None):
         #
         #  Input and storage model is dictionary of lists (e.g. dict[myKey] = [,,,])
         #  Single values are stored in the leading element of the list (e.g. dict[myKey][0])
         #
+        if paramDict is None:
+            paramDict = {}
         self.__dict = paramDict
         self.__debug = False
 
@@ -56,7 +58,7 @@ class ServiceRequestBase(object):
     def __str__(self):
         try:
             return '\n  '.join(self.__outputList())
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return ''
 
     def __repr__(self):
@@ -65,13 +67,13 @@ class ServiceRequestBase(object):
     def printIt(self, ofh=sys.stdout):
         try:
             ofh.write("%s" % self.__str__())
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
 
-    def dump(self, format='text'):
+    def dump(self, format='text'):  # pylint: disable=unused-argument,redefined-builtin
         try:
             return '\n   '.join(self.__outputList())
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
 
     def getJSON(self):
@@ -105,14 +107,14 @@ class ServiceRequestBase(object):
         try:
             self.__dict[myKey] = [aValue]
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def setValueList(self, myKey, valueList):
         try:
             self.__dict[myKey] = valueList
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def setDictionary(self, myDict, overWrite=False):
@@ -124,38 +126,38 @@ class ServiceRequestBase(object):
     def exists(self, myKey):
         try:
             return myKey in self.__dict
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     #
     def _getRawValue(self, myKey):
         try:
             return self.__dict[myKey][0]
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return None
 
     def _getStringValue(self, myKey):
         try:
             return str(self.__dict[myKey][0]).strip()
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return ''
 
     def _getIntegerValue(self, myKey):
         try:
             return int(self.__dict[myKey][0])
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return None
 
     def _getDoubleValue(self, myKey):
         try:
             return float(self.__dict[myKey][0])
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return None
 
     def _getStringList(self, myKey):
         try:
             return self.__dict[myKey]
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return []
 
 
@@ -192,7 +194,7 @@ class ServiceRequest(ServiceRequestBase):
                     return iRp
             else:
                 return iRp
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("Request path processing FAILED")
 
         return None
@@ -217,7 +219,7 @@ class ServiceRequest(ServiceRequestBase):
     def setServiceUserId(self, serviceUserId):
         try:
             return self.setValue('service_user_id', serviceUserId)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
 
     def getSessionUserPath(self):
@@ -226,7 +228,7 @@ class ServiceRequest(ServiceRequestBase):
     def setTopSessionPath(self, pth):
         try:
             return self.setValue('top_session_path', pth)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return False
     #
 
@@ -234,7 +236,7 @@ class ServiceRequest(ServiceRequestBase):
         try:
             self.setValue("wwpdb_site_id", siteId)
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
@@ -261,15 +263,15 @@ class ServiceRequest(ServiceRequestBase):
                 sObj.assignId()
                 sObj.makeSessionPath()
                 self.setValue('session_id', sObj.getId())
-                logger.debug("Creating new session %s " % sObj.getId())
+                logger.debug("Creating new session %s ", sObj.getId())
             else:
                 if self.exists("session_id"):
-                    logger.debug("Aquiring existing session %s " % self._getStringValue("session_id"))
+                    logger.debug("Aquiring existing session %s ", self._getStringValue("session_id"))
                     sObj.setId(uid=self._getStringValue("session_id"))
             #
             self.setValue('session_user_path', sObj.getSessionUserPath())
             logger.debug("Completed")
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("Session acquisition/creation FAILING")
 
         return sObj

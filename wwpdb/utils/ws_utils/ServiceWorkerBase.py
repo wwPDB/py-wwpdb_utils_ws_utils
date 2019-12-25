@@ -120,8 +120,8 @@ class ServiceWorkerBase(object):
                 mth = getattr(self, self.__appPathD[requestPath], None)
                 sst = mth()
             return sst
-        except:
-            logging.exception("FAILING for requestPath %r " % requestPath)
+        except:  # noqa: E722 pylint: disable=bare-except
+            logging.exception("FAILING for requestPath %r ", requestPath)
             sst = ServiceSessionState()
             sst.setServiceError(msg='Operation failure')
 
@@ -139,8 +139,8 @@ class ServiceWorkerBase(object):
             if iD is not None and isinstance(iD, dict) and len(iD) > 0:
                 self._sds.update(iD)
             return True
-        except:
-            logging.exception("FAILED updating with input %r " % iD)
+        except:  # noqa: E722 pylint: disable=bare-except
+            logging.exception("FAILED updating with input %r ", iD)
         return False
 
     def _getSessionStoreDict(self):
@@ -148,7 +148,7 @@ class ServiceWorkerBase(object):
         """
         try:
             return self._sds.getDictionary()
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("FAILED to recover session store")
 
         return {}
@@ -158,7 +158,7 @@ class ServiceWorkerBase(object):
         """
         try:
             return self._sds.set(ky, val)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("FAILED to set session store value")
 
         return {}
@@ -178,20 +178,20 @@ class ServiceWorkerBase(object):
             self._sObj = self._reqObj.getSessionObj(new=new)
             self._sessionId = self._sObj.getId()
             self._sessionPath = self._sObj.getPath()
-            logging.debug("session   id  %s" % self._sessionId)
-            logging.debug("session path  %s" % self._sessionPath)
+            logging.debug("session   id  %s", self._sessionId)
+            logging.debug("session path  %s", self._sessionPath)
             if self._sessionPath is None:
                 return False
             self._rltvSessionPath = self._sObj.getRelativePath()
             self._sds = ServiceDataStore(sessionPath=self._sessionPath, prefix=self._sdsPrefix)
             if (useContext and not new):
                 dd = self._getSessionStoreDict()
-                logging.debug("Imported %r" % dd)
+                logging.debug("Imported %r", dd)
                 self._reqObj.setDictionary(dd, overWrite=contextOverWrite)
             if trackHistory:
                 self._trackSessionHistory(msg='begins')
             return True
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("FAILING create or joining session")
         return False
     ##

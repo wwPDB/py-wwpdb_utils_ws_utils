@@ -28,10 +28,8 @@ __version__ = "V0.07"
 import unittest
 import os
 import platform
-import sys
 import datetime
 import logging
-import pytz
 from past.builtins import xrange
 
 from wwpdb.utils.ws_utils.TokenUtils import JwtTokenUtils
@@ -46,6 +44,7 @@ if not os.path.exists(TESTOUTPUT):
 logging.basicConfig(level=logging.DEBUG, format='\n[%(levelname)s]-%(module)s.%(funcName)s: %(message)s')
 logging.getLogger().setLevel(logging.DEBUG)
 
+
 class MyJwtTokenUtils(JwtTokenUtils):
     def __init__(self, siteId=None, tokenPrefix=None):
         """
@@ -56,43 +55,42 @@ class MyJwtTokenUtils(JwtTokenUtils):
         ssrlPath = os.path.join(TESTOUTPUT)
 
         super(MyJwtTokenUtils, self).__init__(siteId=siteId, tokenPrefix=tokenPrefix,
-                                              site_service_registration_dir_path = ssrdPath,
-                                              site_service_registration_lockdir_path = ssrlPath)
-            
+                                              site_service_registration_dir_path=ssrdPath,
+                                              site_service_registration_lockdir_path=ssrlPath)
+
 
 class TokenUtilsTests(unittest.TestCase):
 
     def setUp(self):
-        self.__tokenPrefix="VALWS"
-        pass
+        self.__tokenPrefix = "VALWS"
 
     def testGetToken(self):
         ''' Test acquiring new or existing token'''
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
-        tokenId, jwtToken = tU.getToken('john.westbrook@rcsb.org')
-        logging.debug("tokenid %r is %r " % (tokenId, jwtToken))
+        tokenId, jwtToken = tU.getToken('some.email@noreply.org')
+        logging.debug("tokenid %r is %r ", tokenId, jwtToken)
         tD = tU.parseToken(jwtToken)
         tId = tD['sub']
-        logging.debug("token %r payload %r " % (tokenId, tD))
+        logging.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
 
     def testTokenTimes(self):
         ''' Test token access creation and expiration dates'''
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken('john.westbrook@rcsb.org')
-        logging.debug("tokenid %r is %r " % (tokenId, jwtToken))
+        logging.debug("tokenid %r is %r ", tokenId, jwtToken)
         tD = tU.parseToken(jwtToken)
         now = datetime.datetime.utcnow()
 
         createS = tD['iat']
         createT = datetime.datetime.utcfromtimestamp(createS)
         difT = now - createT
-        logging.debug("token age %f seconds" % difT.seconds)
+        logging.debug("token age %f seconds", difT.seconds)
 
         expS = tD['exp']
         expT = datetime.datetime.utcfromtimestamp(expS)
         difT = expT - now
-        logging.debug("token expires in %f days" % difT.days)
+        logging.debug("token expires in %f days", difT.days)
         self.assertGreaterEqual(difT.days, 29)
 
     def testReUseManyTokens(self):
@@ -100,10 +98,10 @@ class TokenUtilsTests(unittest.TestCase):
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in xrange(0, 100):
             tokenId, jwtToken = tU.getToken('john.westbrook@rcsb.org')
-            logging.debug("Iteration %3d tokenid %r is %r " % (i, tokenId, jwtToken))
+            logging.debug("Iteration %3d tokenid %r is %r ", i, tokenId, jwtToken)
             tD = tU.parseToken(jwtToken)
             tId = tD['sub']
-            logging.debug("token %r payload %r " % (tokenId, tD))
+            logging.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
 
     def testGetManyTokens(self):
@@ -111,10 +109,10 @@ class TokenUtilsTests(unittest.TestCase):
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in xrange(0, 100):
             tokenId, jwtToken = tU.getToken('john.westbrook%04d@rcsb.org' % i)
-            logging.debug("tokenid %r is %r " % (tokenId, jwtToken))
+            logging.debug("tokenid %r is %r ", tokenId, jwtToken)
             tD = tU.parseToken(jwtToken)
             tId = tD['sub']
-            logging.debug("token %r payload %r " % (tokenId, tD))
+            logging.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
 
     def testRemoveTokens(self):
@@ -122,7 +120,7 @@ class TokenUtilsTests(unittest.TestCase):
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in xrange(0, 100):
             tokenId, jwtToken = tU.getToken('john.westbrook%04d@rcsb.org' % i)
-            logging.debug("tokenid %r is %r " % (tokenId, jwtToken))
+            logging.debug("tokenid %r is %r ", tokenId, jwtToken)
             ok = tU.remove(tokenId)
         self.assertEqual(ok, True)
 
@@ -131,10 +129,10 @@ class TokenUtilsTests(unittest.TestCase):
         '''Test acquire new or existing token and send token to recipient '''
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken('john.westbrook@rcsb.org')
-        logging.debug("tokenid %r is %r " % (tokenId, jwtToken))
+        logging.debug("tokenid %r is %r ", tokenId, jwtToken)
         tD = tU.parseToken(jwtToken)
-        tId = tD['sub']
-        logging.debug("token %r payload %r " % (tokenId, tD))
+        # tId = tD['sub']
+        logging.debug("token %r payload %r ", tokenId, tD)
         #
         msgText = '''
 This is text is presented on multiple lines.
@@ -151,7 +149,7 @@ This is more multi-line text
             outfile.write("%s" % jwtToken)
         smtpU = ServiceSmtpUtils()
         ok = smtpU.emailFiles('jwest@rcsb.rutgers.edu', 'john.westbrook@rcsb.org', 'TEST SUBJECT', msgText,
-                           fileList=[tokenFileName], textAsAttachment=jwtToken, textAttachmentName="text-token.jwt")
+                              fileList=[tokenFileName], textAsAttachment=jwtToken, textAttachmentName="text-token.jwt")
 
         self.assertEqual(ok, True)
 
@@ -171,6 +169,7 @@ def suiteTokenSend():
     suite.addTest(TokenUtilsTests('testSendToken'))
     #
     return suite
+
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner(failfast=True)

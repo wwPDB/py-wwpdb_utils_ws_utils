@@ -90,10 +90,14 @@ class ServiceResponse(object):
         return self._cD['datacontent']
 
     #
-    def setHtmlList(self, htmlList=[]):
+    def setHtmlList(self, htmlList=None):
+        if htmlList is None:
+            htmlList = []
         self._cD['htmlcontent'] = '\n'.join(htmlList)
 
-    def appendHtmlList(self, htmlList=[]):
+    def appendHtmlList(self, htmlList=None):
+        if htmlList is None:
+            htmlList = []
         self._cD['htmlcontent'].extend('\n'.join(htmlList))
 
     def setHtmlText(self, htmlText=''):
@@ -116,28 +120,28 @@ class ServiceResponse(object):
         try:
             if os.path.exists(filePath):
                 self._cD['textcontent'] = open(filePath).read()
-        except:
-            logger.exception("+setTextFile() File read failed %s\n" % filePath)
+        except:  # noqa: E722 pylint: disable=bare-except
+            logger.exception("+setTextFile() File read failed %s\n", filePath)
 
     def setHtmlContentPath(self, aPath):
         self._cD['htmlcontentpath'] = aPath
 
     def getMimetypeAndEncoding(self, filename):
-        type, encoding = mimetypes.guess_type(filename)
+        ftype, encoding = mimetypes.guess_type(filename)
         # We'll ignore encoding, even though we shouldn't really
-        if type is None:
+        if ftype is None:
             if filename.find('.cif.V') > 0:
                 ret = ('text/plain', None)
             else:
                 ret = ('application/octet-stream', None)
         else:
-            ret = (type, encoding)
+            ret = (ftype, encoding)
         return ret
 
     def setBinaryFile(self, filePath, attachmentFlag=False, serveCompressed=True, md5Digest=None):
         try:
             if os.path.exists(filePath):
-                dir, fn = os.path.split(filePath)
+                _dir, fn = os.path.split(filePath)
                 if not serveCompressed and fn.endswith('.gz'):
                     self._cD['datafilecontent'] = gzip.open(filePath, 'rb').read()
                     self._cD['datafileName'] = fn[:-3]
@@ -159,17 +163,17 @@ class ServiceResponse(object):
                         self._cD['datafileName'] = fn[:-3]
                 if md5Digest:
                     self._cD['datafilechecksum'] = md5Digest
-                logger.debug("Serving %s as %s encoding %s att flag %r checksum %r\n" % (filePath, contentType, encodingType, attachmentFlag, md5Digest))
+                logger.debug("Serving %s as %s encoding %s att flag %r checksum %r\n", filePath, contentType, encodingType, attachmentFlag, md5Digest)
                 return True
-        except:
-            logger.exception("ResponseContent.setBinaryFile() File read failed %s\n" % filePath)
+        except:  # noqa: E722 pylint: disable=bare-except
+            logger.exception("ResponseContent.setBinaryFile() File read failed %s\n", filePath)
         return False
 
     def wrapFileAsJsonp(self, filePath, callBack=None):
         try:
             if os.path.exists(filePath):
-                dir, fn = os.path.split(filePath)
-                (rn, ext) = os.path.splitext(fn)
+                _dir, fn = os.path.split(filePath)
+                (_rn, ext) = os.path.splitext(fn)
                 #
                 dd = {}
                 dd['data'] = open(filePath, 'rb').read()
@@ -187,9 +191,9 @@ class ServiceResponse(object):
                 self._cD['disposition'] = 'inline'
                 #
 
-                logger.debug("Serving %s as %s\n" % (filePath, self._cD['datafilecontent']))
-        except:
-            logging.exception("File read failed %s\n" % filePath)
+                logger.debug("Serving %s as %s\n", filePath, self._cD['datafilecontent'])
+        except Exception as e:
+            logging.exception("File read failed %s err %r", filePath, str(e))
 
     def dump(self, maxLength=130):
         retL = []
@@ -203,7 +207,7 @@ class ServiceResponse(object):
                 retL.append("  - key = %-35s - value(1-%d): %s" % (k, maxLength, str(v)[:maxLength]))
         return '\n   '.join(retL)
 
-    def setReturnFormat(self, format):
+    def setReturnFormat(self, format):  # pylint: disable=redefined-builtin
         if format in ['html', 'text', 'json', 'jsonText', 'jsonData', 'location', 'binary', 'jsonp']:
             self._cD['returnformat'] = format
             return True
@@ -214,7 +218,7 @@ class ServiceResponse(object):
         try:
             if tag not in self._cD['datacontent']:
                 self._cD['datacontent'][tag] = msg
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
@@ -297,31 +301,39 @@ class ServiceResponse(object):
         rspDict['RETURN_STRING'] = url
         return rspDict
 
-    def __initBinaryResponse(self, myD={}):
+    def __initBinaryResponse(self, myD=None):
+        if myD is None:
+            myD = {}
         rspDict = {}
         rspDict['CONTENT_TYPE'] = myD['contentmimetype']
         rspDict['RETURN_STRING'] = myD['datafilecontent']
-        try:
+        try:  # noqa: E722 pylint: disable=bare-except
             rspDict['ENCODING'] = myD['encodingtype']
             if myD['disposition'] is not None:
                 rspDict['DISPOSITION'] = "%s; filename=%s" % (myD['disposition'], myD['datafileName'])
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             pass
         return rspDict
 
-    def __initJsonResponse(self, myD={}):
+    def __initJsonResponse(self, myD=None):
+        if myD is None:
+            myD = {}
         rspDict = {}
         rspDict['CONTENT_TYPE'] = 'application/json'
         rspDict['RETURN_STRING'] = json.dumps(myD)
         return rspDict
 
-    def __initJsonpResponse(self, myD={}):
+    def __initJsonpResponse(self, myD=None):
+        if myD is None:
+            myD = {}
         rspDict = {}
         rspDict['CONTENT_TYPE'] = myD['contentmimetype']
         rspDict['RETURN_STRING'] = myD['datafilecontent']
         return rspDict
 
-    def __initJsonResponseInTextArea(self, myD={}):
+    def __initJsonResponseInTextArea(self, myD=None):
+        if myD is None:
+            myD = {}
         rspDict = {}
         rspDict['CONTENT_TYPE'] = 'text/html'
         rspDict['RETURN_STRING'] = '<textarea>' + json.dumps(myD) + '</textarea>'
@@ -339,7 +351,7 @@ class ServiceResponse(object):
         rspDict['RETURN_STRING'] = myText
         return rspDict
 
-    def __processTemplate(self, templateFilePath="./alignment_template.html", webIncludePath='.', parameterDict={}, insertContext=False):
+    def __processTemplate(self, templateFilePath="./alignment_template.html", webIncludePath='.', parameterDict=None, insertContext=False):
         """ Read the input HTML template data file and perform the key/value substitutions in the
             input parameter dictionary.
 
@@ -349,6 +361,9 @@ class ServiceResponse(object):
             webTopPath = file system path for web includes files  (eg. /../../htdocs) which will
                          be prepended to embedded include path in the HTML template document
         """
+
+        if parameterDict is None:
+            parameterDict = {}
         try:
             ifh = open(templateFilePath, 'r')
             sL = []
@@ -360,14 +375,14 @@ class ServiceResponse(object):
                         tfh = open(tpth, 'r')
                         sL.append(tfh.read())
                         tfh.close()
-                    except:
-                        logger.debug("failed to include %s fields=%r\n" % (tpth, fields))
+                    except Exception as e:
+                        logger.debug("failed to include %s fields=%r err=%r\n", tpth, fields, str(e))
                 else:
                     sL.append(line)
             ifh.close()
             sIn = ''.join(sL)
             return (sIn % parameterDict)
-        except:
-            logger.exception("Failed for %s\n" % templateFilePath)
+        except:  # noqa: E722 pylint: disable=bare-except
+            logger.exception("Failed for %s\n", templateFilePath)
 
         return ''

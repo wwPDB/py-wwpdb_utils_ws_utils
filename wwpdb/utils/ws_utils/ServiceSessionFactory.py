@@ -15,7 +15,6 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import sys
 import hashlib
 import time
 import os.path
@@ -70,7 +69,7 @@ class ServiceSessionFactory(object):
                 pth = os.path.join("/sessions", self.__serviceUserId, self.__uid)
             else:
                 pth = os.path.join(self.__topSessionPath, "sessions", self.__serviceUserId, self.__uid)
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
             pth = None
 
@@ -79,12 +78,12 @@ class ServiceSessionFactory(object):
     def getPath(self):
         try:
             pth = self.__getPath()
-            logger.debug("Session path %r" % pth)
+            logger.debug("Session path %r", pth)
             if os.access(pth, os.F_OK):
                 return pth
             else:
                 return None
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
 
         return None
@@ -122,7 +121,7 @@ class ServiceSessionFactory(object):
             if (not os.access(pth, os.F_OK)):
                 os.makedirs(pth)
             return pth
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return None
 
     def remakeSessionPath(self):
@@ -132,5 +131,5 @@ class ServiceSessionFactory(object):
                 shutil.rmtree(pth, True)
             os.makedirs(pth)
             return pth
-        except:
+        except:  # noqa: E722 pylint: disable=bare-except
             return None
