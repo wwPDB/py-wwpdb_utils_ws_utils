@@ -38,7 +38,7 @@ from wwpdb.utils.ws_utils.ServiceSmtpUtils import ServiceSmtpUtils
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 TESTOUTPUT = os.path.join(HERE, "test-output", platform.python_version())
-if not os.path.exists(TESTOUTPUT):
+if not os.path.exists(TESTOUTPUT):  # pragma: no cover
     os.makedirs(TESTOUTPUT)
 
 logging.basicConfig(level=logging.DEBUG, format="\n[%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
@@ -122,7 +122,7 @@ class TokenUtilsTests(unittest.TestCase):
         self.assertEqual(ok, True)
 
     # Disabled - we do not want email in automated test
-    def NoSendToken(self):
+    def NoSendToken(self):  # pragma: no cover
         """Test acquire new or existing token and send token to recipient """
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
@@ -155,7 +155,7 @@ This is more multi-line text
         self.assertEqual(ok, True)
 
 
-def suiteTokenGen():
+def suiteTokenGen():  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testGetToken"))
     suite.addTest(TokenUtilsTests("testTokenTimes"))
@@ -165,14 +165,14 @@ def suiteTokenGen():
     return suite
 
 
-def suiteTokenSend():
+def suiteTokenSend():  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testSendToken"))
     #
     return suite
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     runner = unittest.TextTestRunner(failfast=True)
     runner.run(suiteTokenGen())
     runner.run(suiteTokenSend())

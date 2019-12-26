@@ -52,7 +52,7 @@ setup(
     tests_require=["tox", "future"],
     #
     # Not configured ...
-    extras_require={"dev": ["check-manifest"], "test": ["coverage"],},
+    extras_require={"dev": ["check-manifest"], "test": ["coverage"]},
     # Added for
     command_options={"build_sphinx": {"project": ("setup.py", thisPackage), "version": ("setup.py", version), "release": ("setup.py", version)}},
     # This setting for namespace package support -

@@ -191,7 +191,7 @@ class ServiceDataStore(object):
         """
         try:
             rD = self.__deserialize()
-            for k, v in uDict.iteritems():
+            for k, v in uDict.items():
                 if k not in rD:
                     rD[k] = v
                 else:
@@ -219,7 +219,7 @@ class ServiceDataStore(object):
         """
         try:
             rD = self.__deserialize()
-            for k, v in uDict.iteritems():
+            for k, v in uDict.items():
                 rD[k] = v
             if "status" in rD:
                 logger.debug("Updating status value %r", rD["status"])
