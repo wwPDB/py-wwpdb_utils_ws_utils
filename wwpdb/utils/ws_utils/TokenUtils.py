@@ -228,7 +228,8 @@ class JwtTokenUtils(TokenUtilsBase):
             rD = {"errorCode": self.__tokenErrorCode, "errorMessage": "API access token not found", "errorFlag": True}
         elif len(parts) > 2:
             rD = {"errorCode": self.__tokenErrorCode, "errorMesage": "Authorization header must be Bearer token", "errorFlag": True}
-        rD["token"] = parts[1]
+        if not rD["errorFlag"]:
+            rD["token"] = parts[1]
         return rD
 
     def parseToken(self, token):
@@ -312,7 +313,8 @@ class JwtTokenReader(object):
             rD = {"errorCode": self.__tokenErrorCode, "errorMessage": "API access token not found", "errorFlag": True}
         elif len(parts) > 2:
             rD = {"errorCode": self.__tokenErrorCode, "errorMesage": "Authorization header must be Bearer token", "errorFlag": True}
-        rD["token"] = parts[1]
+        if not rD["errorFlag"]:
+            rD["token"] = parts[1]
         return rD
 
     def parseToken(self, token):

@@ -32,7 +32,7 @@ import datetime
 import logging
 from past.builtins import xrange
 
-from wwpdb.utils.ws_utils.TokenUtils import JwtTokenUtils
+from wwpdb.utils.ws_utils.TokenUtils import JwtTokenUtils, JwtTokenReader
 from wwpdb.utils.ws_utils.ServiceSmtpUtils import ServiceSmtpUtils
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -66,10 +66,13 @@ class TokenUtilsTests(unittest.TestCase):
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("some.email@noreply.org")
         logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+        # Test to ensure proper return
         tD = tU.parseToken(jwtToken)
         tId = tD["sub"]
         logging.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
+        # For coverage
+        self.assertIsNotNone(tU.getFilePath())
 
     def testTokenTimes(self):
         """ Test token access creation and expiration dates"""
@@ -118,6 +121,7 @@ class TokenUtilsTests(unittest.TestCase):
         for i in xrange(0, 100):
             tokenId, jwtToken = tU.getToken("john.westbrook%04d@rcsb.org" % i)
             logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+            self.assertTrue(tU.tokenIdExists(tokenId))
             ok = tU.remove(tokenId)
         self.assertEqual(ok, True)
 
@@ -154,6 +158,98 @@ This is more multi-line text
 
         self.assertEqual(ok, True)
 
+    def testParseAuth(self):
+        """ Test parsing authorization"""
+        tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
+        tokenId, jwtToken = tU.getToken("some.email@noreply.org")
+
+        # Create authorization records - test error casses
+        tR = JwtTokenReader()
+
+        aH = "nonbreaer"
+        rD = tR.parseAuth(aH)
+        self.assertTrue(rD["errorFlag"])
+
+        aH = "bearer"
+        rD = tR.parseAuth(aH)
+        self.assertTrue(rD["errorFlag"])
+
+        aH = "bearer one two"
+        rD = tR.parseAuth(aH)
+        self.assertTrue(rD["errorFlag"])
+
+        aH = "bearer {}".format(jwtToken)
+        rD = tR.parseAuth(aH)
+        self.assertFalse(rD["errorFlag"])
+        self.assertEqual(rD["token"], jwtToken)
+
+        tD = tR.parseToken(jwtToken)
+        self.assertFalse(tD["errorCode"])
+        self.assertEqual(tD["sub"], tokenId)
+
+    def testTokenReaderParseToken(self):
+        """ Test parsing tokens from JwtTokenReader"""
+
+        tR = JwtTokenReader()
+        # Validate token
+        tD = tR.parseToken("invalidToken")
+        self.assertTrue(tD["errorCode"])
+
+        tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
+        tokenId, jwtToken = tU.getToken("some.email@noreply.org")
+
+        tD = tR.parseToken(jwtToken)
+        self.assertFalse(tD["errorCode"])
+        self.assertEqual(tD["sub"], tokenId)
+
+        # Create an expired token
+        tokenId, jwtToken = tU.getToken("some.email@noreply.org", expireDays=-2)
+        tD = tR.parseToken(jwtToken)
+        self.assertTrue(tD["errorCode"])
+        self.assertEqual(tD["errorMessage"], "API access token has expired")
+
+    def testTokenUtilsParseToken(self):
+        """ Test parsing tokens from TokenUtils"""
+
+        tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
+
+        tD = tU.parseToken("invalidToken")
+        self.assertTrue(tD["errorCode"])
+
+        tokenId, jwtToken = tU.getToken("some.email@noreply.org")
+
+        tD = tU.parseToken(jwtToken)
+        self.assertFalse(tD["errorCode"])
+        self.assertEqual(tD["sub"], tokenId)
+
+        # Create an expired token
+        tokenId, jwtToken = tU.getToken("some.email@noreply.org", expireDays=-2)
+        tD = tU.parseToken(jwtToken)
+        self.assertTrue(tD["errorCode"])
+        self.assertEqual(tD["errorMessage"], "API access token has expired")
+
+    def testTokenUtilsParseAuth(self):
+        """ Test parsing authorization"""
+        tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
+        tokenId, jwtToken = tU.getToken("some.email@noreply.org")  # pylint: disable=unused-variable
+
+        aH = "nonbreaer"
+        rD = tU.parseAuth(aH)
+        self.assertTrue(rD["errorFlag"])
+
+        aH = "bearer"
+        rD = tU.parseAuth(aH)
+        self.assertTrue(rD["errorFlag"])
+
+        aH = "bearer one two"
+        rD = tU.parseAuth(aH)
+        self.assertTrue(rD["errorFlag"])
+
+        aH = "bearer {}".format(jwtToken)
+        rD = tU.parseAuth(aH)
+        self.assertFalse(rD["errorFlag"])
+        self.assertEqual(rD["token"], jwtToken)
+
 
 def suiteTokenGen():  # pragma: no cover
     suite = unittest.TestSuite()
@@ -162,6 +258,8 @@ def suiteTokenGen():  # pragma: no cover
     suite.addTest(TokenUtilsTests("testReUseManyTokens"))
     suite.addTest(TokenUtilsTests("testGetManyTokens"))
     suite.addTest(TokenUtilsTests("testRemoveTokens"))
+    suite.addTest(TokenUtilsTests("testTokenUtilsParseToken"))
+    suite.addTest(TokenUtilsTests("testTokenUtilsParseAuth"))
     return suite
 
 
@@ -172,7 +270,16 @@ def suiteTokenSend():  # pragma: no cover
     return suite
 
 
+def suiteTokenReader():  # pragma: no cover
+    suite = unittest.TestSuite()
+    suite.addTest(TokenUtilsTests("testParseAuth"))
+    suite.addTest(TokenUtilsTests("testTokenReaderParseToken"))
+    #
+    return suite
+
+
 if __name__ == "__main__":  # pragma: no cover
     runner = unittest.TextTestRunner(failfast=True)
     runner.run(suiteTokenGen())
-    runner.run(suiteTokenSend())
+    # runner.run(suiteTokenSend())
+    runner.run(suiteTokenReader())
