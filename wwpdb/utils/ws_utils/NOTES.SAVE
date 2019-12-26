@@ -13,7 +13,7 @@ enabled_plugins         rabbitmq-env.conf
 Assign a password to the default guest user
 | => rabbitmqctl add_user guest guest1234
 
-| => rabbitmqctl add_user rbmq-admin rbmq0000
+| => rabbitmqctl add_user rbmq-admin xxxxxx
 | => rabbitmqctl set_user_tags rbmq-admin administrator
 Setting tags for user "rbmq-admin" to [administrator] ...
 
@@ -21,10 +21,10 @@ Setting tags for user "rbmq-admin" to [administrator] ...
 | => rabbitmqctl delete_user rb-admin
 Deleting user "rb-admin" ...
 
-| => rabbitmqctl add_user rbmq-admin rbmq0000
+| => rabbitmqctl add_user rbmq-admin xxxxxx
 Creating user "rbmq-admin" ...
 
-| => rabbitmqctl add_user rbmq-dev rbmq0000
+| => rabbitmqctl add_user rbmq-dev xxxxxx
 Creating user "rbmq-dev" ...
 
 | => rabbitmqctl set_user_tags rbmq-admin administrator
@@ -43,7 +43,7 @@ Setting permissions for user "rbmq-dev" in vhost "rbmq-vhost" ...
 
 
 
-rabbitmqctl add_user rbmq-dev rbmq0000
+rabbitmqctl add_user rbmq-dev xxxxxx
 
 
 
