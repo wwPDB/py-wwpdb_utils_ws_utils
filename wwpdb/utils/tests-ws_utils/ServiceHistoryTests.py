@@ -46,7 +46,7 @@ class ServiceHistoryTests(unittest.TestCase):
     def setUp(self):
         self.__histpath = os.path.join(TESTOUTPUT, "sessionhistory")
         if not os.path.exists(self.__histpath):
-            os.makedirs(self.__histpath)
+            os.makedirs(self.__histpath)  # pragma: no cover
 
     def testHistory(self):
         """ Test acquiring new or existing token"""

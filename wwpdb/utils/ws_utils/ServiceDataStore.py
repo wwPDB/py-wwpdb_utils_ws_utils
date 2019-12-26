@@ -26,7 +26,6 @@ except ImportError:
     import pickle
 import os.path
 import logging
-from wwpdb.utils.ws_utils.ServiceLockFile import ServiceLockFile
 
 from oslo_concurrency import lockutils
 
@@ -87,37 +86,6 @@ class ServiceDataStore(object):
 
         if "status" in rD:
             logger.debug("Session %s - read dictionary %r", self.__sessionPath, rD["status"])
-        return rD
-
-    #
-
-    def __serializeLocking(self, iD):
-        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
-            try:
-                with open(self.__filePath, "wb") as fb:
-                    pickle.dump(iD, fb, self.__pickleProtocol)
-                if "status" in iD:
-                    logger.debug("Wrote status value %r", iD["status"])
-                return True
-            except Exception as e:
-                logger.exception("Serialization failure with file %s - %r", self.__filePath, str(e))
-        return False
-
-    def __deserializeLocking(self):
-        rD = {}
-        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
-            try:
-                if not os.access(self.__filePath, os.R_OK):
-                    logger.warning("No data store in path %r ", self.__filePath)
-                    return rD
-            except:  # noqa: E722 pylint: disable=bare-except
-                pass
-            try:
-                with open(self.__filePath, "rb") as fb:
-                    rD = pickle.load(fb)
-            except Exception as e:
-                logger.exception("Deserialization failure with file %s - %r", self.__filePath, str(e))
-
         return rD
 
     def __str__(self):
