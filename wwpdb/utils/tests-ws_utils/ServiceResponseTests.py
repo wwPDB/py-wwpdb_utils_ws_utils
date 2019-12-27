@@ -60,7 +60,7 @@ class ServiceResponseTests(unittest.TestCase):
         self.__sr.setData(dt)
         self.assertEqual(self.__sr.getData(), dt)
 
-    def testHtmlList(self):
+    def testHtml(self):
         """ Test html list actions"""
         self.__sr.setHtmlList()
         self.__sr.setHtmlList(["Test file is foo.py", "Of two items"])
@@ -71,13 +71,32 @@ class ServiceResponseTests(unittest.TestCase):
         resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
 
         # Templates
+        self.__sr.setHtmlTextFromTemplate(os.path.join(HERE, "template.txt"), HERE, parameterDict={"T1": 2})
+        sys.stderr.write("%s\n" % self.__sr.dump())
+
+    def testSet(self):
+        """Random tests of setting values"""
+        # Link content
+        self.__sr.setHtmlLinkText("htmltext")
+        self.__sr.setText("Randomtext")
+
+        sys.stderr.write("testSet output %s\n" % self.__sr.dump())
+        self.__sr.setTextFile(os.path.join(HERE, "template.txt"))
+        self.__sr.setHtmlContentPath("https://wwpdb.org")
+        self.assertEqual(("text/plain", None), self.__sr.getMimetypeAndEncoding(os.path.join(HERE, "template.txt")))
+
+        self.__sr.setReturnFormat("html")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+
+        self.assertTrue(self.__sr.setBinaryFile(os.path.join(HERE, "template.txt")))
 
 
 def suiteServiceResponse():  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(ServiceResponseTests("testSetError"))
     suite.addTest(ServiceResponseTests("testSetData"))
-    suite.addTest(ServiceResponseTests("testHtmlList"))
+    suite.addTest(ServiceResponseTests("testHtml"))
+    suite.addTest(ServiceResponseTests("testSet"))
     return suite
 
 

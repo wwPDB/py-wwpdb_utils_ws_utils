@@ -1,0 +1,5 @@
+This is a template file for ServiceResponse testing
+
+Subsitute the value %(T1)s here
+
+<!--#include virtual="/includetest.txt"-->
