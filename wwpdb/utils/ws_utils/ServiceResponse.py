@@ -25,8 +25,15 @@ from webob import Response
 
 try:
     import json
-except ImportError:
+except ImportError:  # pragma: no cover
     import simplejson as json
+
+try:
+    # Python 2
+    text_type = unicode
+except NameError:
+    # Python 3
+    text_type = str
 
 logger = logging.getLogger()
 
@@ -97,7 +104,10 @@ class ServiceResponse(object):
     def appendHtmlList(self, htmlList=None):
         if htmlList is None:
             htmlList = []
-        self._cD["htmlcontent"].extend("\n".join(htmlList))
+        if len(self._cD["htmlcontent"]) > 0:
+            self._cD["htmlcontent"] = "%s\n%s" % (self._cD["htmlcontent"], "\n".join(htmlList))
+        else:
+            self._cD["htmlcontent"] = "\n".join(htmlList)
 
     def setHtmlText(self, htmlText=""):
         self._cD["htmlcontent"] = htmlText
@@ -229,7 +239,12 @@ class ServiceResponse(object):
         myResponse = Response()
         myResponse.status = rspD["STATUS_CODE"]
         myResponse.content_type = rspD["CONTENT_TYPE"]
-        myResponse.body = rspD["RETURN_STRING"]
+
+        if isinstance(rspD["RETURN_STRING"], text_type):
+            myResponse.text = rspD["RETURN_STRING"]
+        else:
+            myResponse.body = rspD["RETURN_STRING"]
+
         if "ENCODING" in rspD:
             myResponse.content_encoding = rspD["ENCODING"]
         if "DISPOSITION" in rspD:
