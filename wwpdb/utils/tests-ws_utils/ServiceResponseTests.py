@@ -89,6 +89,26 @@ class ServiceResponseTests(unittest.TestCase):
         resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
 
         self.assertTrue(self.__sr.setBinaryFile(os.path.join(HERE, "template.txt")))
+        # Random wrapping in json format
+        self.__sr.wrapFileAsJsonp(os.path.join(HERE, "template.txt"), "test")
+        self.__sr.setReturnFormat("json")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+        self.__sr.setReturnFormat("jsondata")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+        self.__sr.setReturnFormat("binary")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+        self.__sr.setReturnFormat("jsonText")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+        self.__sr.setReturnFormat("text")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+        self.__sr.setReturnFormat("location")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+
+        self.__sr.setError()
+        self.__sr.setReturnFormat("json")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
+        self.__sr.setReturnFormat("html")
+        resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
 
 
 def suiteServiceResponse():  # pragma: no cover

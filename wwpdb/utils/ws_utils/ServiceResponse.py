@@ -185,7 +185,7 @@ class ServiceResponse(object):
                 (_rn, ext) = os.path.splitext(fn)
                 #
                 dd = {}
-                dd["data"] = open(filePath, "rb").read()
+                dd["data"] = open(filePath, "r").read()
                 if ext.lower() != ".json":
                     self._cD["datafilecontent"] = callBack + "(" + json.dumps(dd) + ");"
                 else:
