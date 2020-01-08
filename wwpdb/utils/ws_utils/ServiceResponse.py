@@ -128,7 +128,8 @@ class ServiceResponse(object):
     def setTextFile(self, filePath):
         try:
             if os.path.exists(filePath):
-                self._cD["textcontent"] = open(filePath).read()
+                with open(filePath, "r") as fin:
+                    self._cD["textcontent"] = fin.read()
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("+setTextFile() File read failed %s\n", filePath)
 
@@ -152,11 +153,13 @@ class ServiceResponse(object):
             if os.path.exists(filePath):
                 _dir, fn = os.path.split(filePath)
                 if not serveCompressed and fn.endswith(".gz"):
-                    self._cD["datafilecontent"] = gzip.open(filePath, "rb").read()
+                    with gzip.open(filePath, "rb") as fin:
+                        self._cD["datafilecontent"] = fin.read()
                     self._cD["datafileName"] = fn[:-3]
                     contentType, encodingType = self.getMimetypeAndEncoding(filePath[:-3])
                 else:
-                    self._cD["datafilecontent"] = open(filePath, "rb").read()
+                    with open(filePath, "rb") as fin:
+                        self._cD["datafilecontent"] = fin.read()
                     self._cD["datafileName"] = fn
                     contentType, encodingType = self.getMimetypeAndEncoding(filePath)
                 #
@@ -185,7 +188,8 @@ class ServiceResponse(object):
                 (_rn, ext) = os.path.splitext(fn)
                 #
                 dd = {}
-                dd["data"] = open(filePath, "r").read()
+                with open(filePath, "r") as fin:
+                    dd["data"] = fin.read()
                 if ext.lower() != ".json":
                     self._cD["datafilecontent"] = callBack + "(" + json.dumps(dd) + ");"
                 else:
