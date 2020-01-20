@@ -46,6 +46,8 @@ logging.getLogger().setLevel(logging.DEBUG)
 class ServiceDataStoreTests(unittest.TestCase):
     def setUp(self):
         self.__sessdir = os.path.join(TESTOUTPUT, "session")
+        if not os.path.exists(self.__sessdir):  # pragma: no cover
+            os.makedirs(self.__sessdir)
 
     def testInstantiate(self):
         """ Test acquiring new or existing token"""
