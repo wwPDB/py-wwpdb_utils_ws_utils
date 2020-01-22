@@ -105,3 +105,6 @@ venv.bak/
 
 # Test output
 wwpdb/utils/tests-ws_utils/test-output/
+
+# emacs autosave
+*~
