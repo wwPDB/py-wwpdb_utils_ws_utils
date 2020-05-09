@@ -99,11 +99,11 @@ class ServiceSessionState(object):
     def assign(self, name, args=None, completionFlag=None):
         try:
             if name is not None:
-                self.setserviceName(name)
+                self.setServiceName(name)
             if args is not None:
-                self.setserviceArgs(args)
+                self.setServiceArgs(args)
             if completionFlag is not None:
-                self.setserviceCompletionFlag(completionFlag)
+                self.setServiceCompletionFlag(completionFlag)
             return True
         except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("FAILING")
