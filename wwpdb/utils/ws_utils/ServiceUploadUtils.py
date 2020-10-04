@@ -31,7 +31,7 @@ logger = logging.getLogger()
 
 class ServiceUploadUtils(object):
     """
-     This class encapsulates all of the web application upload tasks.
+    This class encapsulates all of the web application upload tasks.
 
     """
 
@@ -45,8 +45,7 @@ class ServiceUploadUtils(object):
         logger.debug(" - session path %s\n", self.__sessionPath)
 
     def isFileUpload(self, fileTag="file"):
-        """ Generic check for the existence of request paramenter "fileTag=".
-        """
+        """Generic check for the existence of request paramenter "fileTag="."""
         # Gracefully exit if no file is provide in the request object -
         fs = self.__reqObj.getRawValue(fileTag)
 
@@ -60,8 +59,7 @@ class ServiceUploadUtils(object):
         return True
 
     def getUploadFileName(self, fileTag="file"):
-        """  Get the user supplied name of for the uploaded file -
-        """
+        """Get the user supplied name of for the uploaded file -"""
         #
 
         logger.debug("operation started")
@@ -88,9 +86,9 @@ class ServiceUploadUtils(object):
         return None
 
     def copyToSession(self, fileTag="file", sessionFileName=None, uncompress=True):
-        """  Copy uploaded file identified form element name 'fileTag' to the current session directory.
+        """Copy uploaded file identified form element name 'fileTag' to the current session directory.
 
-             File is copied to user uploaded file or to the sessionFileName if this is provided.
+        File is copied to user uploaded file or to the sessionFileName if this is provided.
         """
         #
         logger.debug("- operation started")
@@ -150,12 +148,12 @@ class ServiceUploadUtils(object):
             return False
 
     def getFileExtension(self, fileName, ignoreVersion=False):
-        """ Return the file extension (basename.ext).
+        """Return the file extension (basename.ext).
 
-            If the input file contains no '.' then None is returned.
+        If the input file contains no '.' then None is returned.
 
-            if ignoreVersion=True then any trailing version details are
-               discarded before extracting the file extension -
+        if ignoreVersion=True then any trailing version details are
+           discarded before extracting the file extension -
         """
         fExt = None
         if fileName is None or len(fileName) < 1:
@@ -181,8 +179,8 @@ class ServiceUploadUtils(object):
         return fExt
 
     def perceiveIdentifier(self, fileName):
-        """ Return the file identifier and identifier source if these can be deduced from
-            the input file name.   Returned values are in uppercase.
+        """Return the file identifier and identifier source if these can be deduced from
+        the input file name.   Returned values are in uppercase.
         """
         #
         #
@@ -219,8 +217,7 @@ class ServiceUploadUtils(object):
         return fId, fType
 
     def __copyGzip(self, inpFilePath, outFilePath):
-        """
-        """
+        """"""
         try:
             cmd = " gzip -cd  %s > %s " % (inpFilePath, outFilePath)
             os.system(cmd)

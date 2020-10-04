@@ -43,11 +43,10 @@ logger = logging.getLogger()
 
 class ServiceSmtpUtils(object):
     def __init__(self):
-        """  Collection of mail handling methods -
-        """
+        """Collection of mail handling methods -"""
 
     def sendFile(self, srcPath, toAddr, fromAddr, subject, replyAddr="noreply@mail.wwpdb.org"):
-        """ Internal method to mail file as text.
+        """Internal method to mail file as text.
 
         Reply-To: noreply@example.com
         """
@@ -70,8 +69,7 @@ class ServiceSmtpUtils(object):
         s.close()
 
     def emailFiles(self, fromAddr, toAddr, subject, text, replyAddr=None, fileList=None, textAsAttachment=None, textAttachmentName="token.txt"):
-        """'noreply@mail.wwpdb.org'
-        """
+        """'noreply@mail.wwpdb.org'"""
 
         msg = MIMEMultipart()
         msg["From"] = fromAddr
@@ -110,8 +108,7 @@ class ServiceSmtpUtils(object):
         return False
 
     def emailTextWithAttachment(self, fromAddr, toAddr, replyAddr, subject, text, textAsAttachment=None, textFileName=None):
-        """
-        """
+        """"""
 
         msg = MIMEMultipart()
         msg["From"] = fromAddr

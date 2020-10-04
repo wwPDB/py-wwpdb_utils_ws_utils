@@ -47,8 +47,8 @@ logger = logging.getLogger()
 class TokenUtilsBase(object):
     def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
         """
-         Base class supporting application token management in persistent store.
-         kwargs allows for overriding ConfigInfo for testing
+        Base class supporting application token management in persistent store.
+        kwargs allows for overriding ConfigInfo for testing
 
         """
         #
@@ -153,8 +153,7 @@ class TokenUtilsBase(object):
             return ""
 
     def saveTokenId(self, tokenId, email, **kw):
-        """
-        """
+        """"""
         if tokenId is None or len(tokenId) < 12 or email is None or len(email) < 3:
             return False
         try:
@@ -170,8 +169,8 @@ class TokenUtilsBase(object):
         return False
 
     def fetchTokenId(self, email):
-        """  Return any existing token assigned to the input e-mail or create the next token
-             identifer with this e-mail assignment.
+        """Return any existing token assigned to the input e-mail or create the next token
+        identifer with this e-mail assignment.
         """
         try:
             return self.__emailD[email]
@@ -187,9 +186,9 @@ class TokenUtilsBase(object):
         return tokenId
 
     def __nextTokenId(self):
-        """ Return the next token identifier string (e.g. N+1 for <PREFIX>_0000000N)
+        """Return the next token identifier string (e.g. N+1 for <PREFIX>_0000000N)
 
-            return 1-N for success or -1 for failure
+        return 1-N for success or -1 for failure
         """
         try:
             if len(self.__tokenD.keys()) > 0:
@@ -233,13 +232,12 @@ class JwtTokenUtils(TokenUtilsBase):
         return rD
 
     def parseToken(self, token):
-        """ Return data payload for the input token along with any error diagnostics -
-        """
+        """Return data payload for the input token along with any error diagnostics -"""
         return self.__getTokenData(token)
 
     def getToken(self, email, expireDays=30):
-        """ Return a tokenId and a jwt token for the input e-mail address.
-            Existing tokenId's are reused with the existing email address.
+        """Return a tokenId and a jwt token for the input e-mail address.
+        Existing tokenId's are reused with the existing email address.
 
         """
         tokenId = self.fetchTokenId(email)
@@ -266,8 +264,7 @@ class JwtTokenUtils(TokenUtilsBase):
         return jwt.decode(token, secretKey, algorithms=algorithm)
 
     def __getTokenData(self, token):
-        """  Return token payload as a dictionary and processing diagnostics -
-        """
+        """Return token payload as a dictionary and processing diagnostics -"""
         errorCode = None
         errorMessage = None
         tokenData = {}
@@ -318,16 +315,14 @@ class JwtTokenReader(object):
         return rD
 
     def parseToken(self, token):
-        """ Return data payload for the input token along with any error diagnostics -
-        """
+        """Return data payload for the input token along with any error diagnostics -"""
         return self.__getTokenData(token)
 
     def __parseToken(self, token, secretKey="secretvalue", algorithm="HS256"):
         return jwt.decode(token, secretKey, algorithms=algorithm)
 
     def __getTokenData(self, token):
-        """  Return token payload as a dictionary and processing diagnostics -
-        """
+        """Return token payload as a dictionary and processing diagnostics -"""
         errorCode = None
         errorMessage = None
         tokenData = {}

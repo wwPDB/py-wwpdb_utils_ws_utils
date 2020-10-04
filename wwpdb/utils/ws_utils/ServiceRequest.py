@@ -35,8 +35,7 @@ logger = logging.getLogger()
 
 class ServiceRequestBase(object):
 
-    """ Base container and accessors for input and output parameters and control information.
-    """
+    """Base container and accessors for input and output parameters and control information."""
 
     def __init__(self, paramDict=None):
         #
@@ -173,13 +172,11 @@ class ServiceRequest(ServiceRequestBase):
             self.setValue("return_format", self.__returnFormatDefault)
 
     def setRequestPathPrefix(self, prefix):
-        """  Set optional request path prefix to be removed before applying application routing.
-        """
+        """Set optional request path prefix to be removed before applying application routing."""
         self.__requestPrefix = prefix
 
     def getRequestPathPrefix(self):
-        """  Get request path prefix.
-        """
+        """Get request path prefix."""
         return self.__requestPrefix
 
     def getRequestPath(self):
@@ -250,8 +247,7 @@ class ServiceRequest(ServiceRequestBase):
         return self._getStringValue("semaphore")
 
     def getSessionObj(self, new=False):
-        """  Get or create new session -
-        """
+        """Get or create new session -"""
         try:
             logger.debug("Starting")
             sObj = ServiceSessionFactory()

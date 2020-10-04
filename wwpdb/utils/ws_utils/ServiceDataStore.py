@@ -33,9 +33,7 @@ logger = logging.getLogger()
 
 
 class ServiceDataStore(object):
-    """  Provide a storage interface for miscellaneous key,value data.
-
-    """
+    """Provide a storage interface for miscellaneous key,value data."""
 
     def __init__(self, sessionPath, prefix=None):
         self.__filePrefix = prefix if prefix is not None else "general"
@@ -155,8 +153,7 @@ class ServiceDataStore(object):
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
     def update(self, uDict):
-        """  Update (without overwrite) objects in the first level dictionary store.
-        """
+        """Update (without overwrite) objects in the first level dictionary store."""
         try:
             rD = self.__deserialize()
             for k, v in uDict.items():
@@ -183,8 +180,7 @@ class ServiceDataStore(object):
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
     def updateAll(self, uDict):
-        """  Update with overwrite values first level dictionary store.
-        """
+        """Update with overwrite values first level dictionary store."""
         try:
             rD = self.__deserialize()
             for k, v in uDict.items():

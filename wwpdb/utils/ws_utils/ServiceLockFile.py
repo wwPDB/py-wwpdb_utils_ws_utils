@@ -25,25 +25,25 @@ class LockFileTimeoutException(Exception):
 
 
 class ServiceLockFile(object):
-    """ A simple cross-platform file locking utilitiy class using an auxiliary
-        lock file.
+    """A simple cross-platform file locking utilitiy class using an auxiliary
+    lock file.
 
-        This class provides internal methods supporting context-management
-        (e.g. with statement support).  For example,
+    This class provides internal methods supporting context-management
+    (e.g. with statement support).  For example,
 
-        with ServiceLockFile("target-file.db", timeoutSeconds=2) as lock:
-            # - process/update the target-file.db.
+    with ServiceLockFile("target-file.db", timeoutSeconds=2) as lock:
+        # - process/update the target-file.db.
 
-        # - At the end of this 'with' clause the lock is automatically removed.
+    # - At the end of this 'with' clause the lock is automatically removed.
 
     """
 
     def __init__(self, filePath, timeoutSeconds=15, retrySeconds=0.2):
-        """ Prepare the file locker. Specify the file to lock and optionally
-            the maximum timeoutSeconds and the retrySeconds between each attempt to lock.
+        """Prepare the file locker. Specify the file to lock and optionally
+        the maximum timeoutSeconds and the retrySeconds between each attempt to lock.
 
-            It is assumed that the locking file will be created within the
-            path of the target file.
+        It is assumed that the locking file will be created within the
+        path of the target file.
         """
         self.__isLocked = False
         self.__lockFilePath = os.path.join(filePath + ".lock")
@@ -56,11 +56,11 @@ class ServiceLockFile(object):
         #
 
     def acquire(self):
-        """ Create the lock if no lock file exists.  If a lockfile exists then
-            repeat the test every retrySeconds.
+        """Create the lock if no lock file exists.  If a lockfile exists then
+        repeat the test every retrySeconds.
 
-            If the lock cannot be acquired within  'timeoutSeconds' then
-            throw an exception.
+        If the lock cannot be acquired within  'timeoutSeconds' then
+        throw an exception.
 
         """
         timeBegin = time.time()
@@ -85,8 +85,7 @@ class ServiceLockFile(object):
         self.__isLocked = True
 
     def release(self):
-        """ Remove any existing lock file.
-        """
+        """Remove any existing lock file."""
         if self.__isLocked:
             os.close(self.__fd)
             os.unlink(self.__lockFilePath)
@@ -95,21 +94,18 @@ class ServiceLockFile(object):
                 logger.debug("LockFile(release) removed lock file %s", self.__lockFilePath)
 
     def __enter__(self):
-        """ Internal method invoked at the beginning of a 'with' clause.
-        """
+        """Internal method invoked at the beginning of a 'with' clause."""
         if not self.__isLocked:
             self.acquire()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        """ Internal method invoked at the end of a 'with' clause.
-        """
+        """Internal method invoked at the end of a 'with' clause."""
         if self.__isLocked:
             self.release()
 
     def __del__(self):
-        """ Internal method to cleanup any lingering lock file.
-        """
+        """Internal method to cleanup any lingering lock file."""
         self.release()
 
 

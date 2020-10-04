@@ -52,8 +52,7 @@ class ServiceResponse(object):
         self._cD = self.__setup(returnFormat)
 
     def __setup(self, returnFormat):
-        """ Default response content is set here.
-        """
+        """Default response content is set here."""
         cD = {}
         cD["returnformat"] = returnFormat
         cD["htmllinkcontent"] = ""
@@ -259,8 +258,7 @@ class ServiceResponse(object):
         return myResponse
 
     def __getD(self):
-        """ Return an internal dictionary as precursor to preparing for web server response object
-        """
+        """Return an internal dictionary as precursor to preparing for web server response object"""
         rD = {}
         returnFormat = self._cD["returnformat"]
 
@@ -370,14 +368,14 @@ class ServiceResponse(object):
         return rspDict
 
     def __processTemplate(self, templateFilePath="./alignment_template.html", webIncludePath=".", parameterDict=None, insertContext=False):
-        """ Read the input HTML template data file and perform the key/value substitutions in the
-            input parameter dictionary.
+        """Read the input HTML template data file and perform the key/value substitutions in the
+        input parameter dictionary.
 
-            if insertContext is set then paramDict is injected as a json object if <!--insert application_context=""-->
+        if insertContext is set then paramDict is injected as a json object if <!--insert application_context=""-->
 
-            Template HTML file path -  (e.g. /../../htdocs/<appName>/template.html)
-            webTopPath = file system path for web includes files  (eg. /../../htdocs) which will
-                         be prepended to embedded include path in the HTML template document
+        Template HTML file path -  (e.g. /../../htdocs/<appName>/template.html)
+        webTopPath = file system path for web includes files  (eg. /../../htdocs) which will
+                     be prepended to embedded include path in the HTML template document
         """
 
         if parameterDict is None:

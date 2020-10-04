@@ -26,19 +26,19 @@ logger = logging.getLogger()
 
 class ServiceSessionFactory(object):
     """
-        Utilities for service session directory management.
+    Utilities for service session directory management.
 
     """
 
     def __init__(self, topPath=None, serviceUserId=None):
         """
-             Organization of the service session directory is --
+        Organization of the service session directory is --
 
-             <topPath>/<Service_id>/<sha-hash>/<session_files>
+        <topPath>/<Service_id>/<sha-hash>/<session_files>
 
-             Parameters:
-             :param string topPath: is the path to the directory containing the hash-id sub-directory.
-             :param string serviceId: is the path to the directory containing the hash-id sub-directory.
+        Parameters:
+        :param string topPath: is the path to the directory containing the hash-id sub-directory.
+        :param string serviceId: is the path to the directory containing the hash-id sub-directory.
 
         """
         self.__topSessionPath = topPath if topPath else "."
@@ -113,8 +113,8 @@ class ServiceSessionFactory(object):
         return True
 
     def makeSessionPath(self):
-        """ If the path to the current session directory does not exist
-            create it and return the session path.
+        """If the path to the current session directory does not exist
+        create it and return the session path.
         """
         try:
             pth = self.__getPath()

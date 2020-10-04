@@ -49,9 +49,9 @@ logger = logging.getLogger()
 class ServiceWorkerBase(object):
     def __init__(self, reqObj=None, sessionDataPrefix=None):
         """
-         Base class supporting web application worker methods.
+        Base class supporting web application worker methods.
 
-         Performs URL -> application mapping for this module.
+        Performs URL -> application mapping for this module.
 
         """
         self._reqObj = reqObj
@@ -74,7 +74,7 @@ class ServiceWorkerBase(object):
         #
 
     def _trackServiceStatus(self, op, **params):
-        """  Add a service history status tracking record.
+        """Add a service history status tracking record.
 
         :param string  op:  operation status  (e.g., 'created', 'submitted', 'completed', 'failed' , ...)
         :param dictionary params:  optional key-value payload stored with status record.
@@ -87,9 +87,7 @@ class ServiceWorkerBase(object):
         return sH.add(sessionId=self._sessionId, statusOp=op, **params)
 
     def _getServiceActivitySummary(self):
-        """  Get the service activity summary.
-
-        """
+        """Get the service activity summary."""
         sH = ServiceHistory(historyPath=self._reqObj.getSessionUserPath())
         return sH.getActivitySummary()
 
@@ -103,9 +101,9 @@ class ServiceWorkerBase(object):
     def _run(self, reqPath=None):
         """Map operation to path and invoke operation.  Exceptions are caught within this method.
 
-            :returns:
+        :returns:
 
-            Operation output is packaged in a ServiceSessionState() object.
+        Operation output is packaged in a ServiceSessionState() object.
 
         """
         #
@@ -130,9 +128,9 @@ class ServiceWorkerBase(object):
 
     #
     def _appendSessionStore(self, iD=None):
-        """   Dictionary of key value pairs will be appended to the session parameter store.
+        """Dictionary of key value pairs will be appended to the session parameter store.
 
-              list and dict type values are extended/appended to existing values of corresponding types.
+        list and dict type values are extended/appended to existing values of corresponding types.
 
 
         """
@@ -145,8 +143,7 @@ class ServiceWorkerBase(object):
         return False
 
     def _getSessionStoreDict(self):
-        """ Recover session store data as a dictionary.
-        """
+        """Recover session store data as a dictionary."""
         try:
             return self._sds.getDictionary()
         except:  # noqa: E722 pylint: disable=bare-except
@@ -155,8 +152,7 @@ class ServiceWorkerBase(object):
         return {}
 
     def _setSessionStoreValue(self, ky, val):
-        """ Set session store data as a dictionary.
-        """
+        """Set session store data as a dictionary."""
         try:
             return self._sds.set(ky, val)
         except:  # noqa: E722 pylint: disable=bare-except
@@ -170,9 +166,7 @@ class ServiceWorkerBase(object):
         self._sds.append("session_history", (rP, tS, msg))
 
     def _getSession(self, new=False, useContext=False, contextOverWrite=True, trackHistory=True):
-        """ Join existing session or create new session as required.
-
-        """
+        """Join existing session or create new session as required."""
         #
         try:
             #

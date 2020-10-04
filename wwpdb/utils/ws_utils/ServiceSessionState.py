@@ -21,14 +21,12 @@ logger = logging.getLogger()
 
 
 class ServiceSessionState(object):
-    """Accessors to encapsulate common service session details --
-    """
+    """Accessors to encapsulate common service session details --"""
 
     #
 
     def __init__(self):
-        """
-        """
+        """"""
         #
         self.__D = {}
         self.__strKeyList = ["servicename", "serviceargs", "statustext", "errormessage", "warningmessage", "responseformat"]

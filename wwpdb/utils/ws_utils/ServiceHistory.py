@@ -33,14 +33,12 @@ logger = logging.getLogger()
 
 
 class ServiceHistory(object):
-    """ Methods to manage service session history tracking
-    """
+    """Methods to manage service session history tracking"""
 
     #
 
     def __init__(self, historyPath, useUTC=False):
-        """
-        """
+        """"""
         #
         self.__useUtc = useUTC
         self.__historyPath = historyPath
@@ -61,8 +59,7 @@ class ServiceHistory(object):
 
     #
     def __serialize(self, iD, mode="wb"):
-        """ Internal method to write session history data to persistent store.
-        """
+        """Internal method to write session history data to persistent store."""
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
             try:
                 with open(self.__filePath, mode) as fb:
@@ -73,8 +70,7 @@ class ServiceHistory(object):
         return False
 
     def __deserialize(self):
-        """ Internal method to recover session history data from persistent store.
-        """
+        """Internal method to recover session history data from persistent store."""
         rD = {}
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
             try:
@@ -101,13 +97,13 @@ class ServiceHistory(object):
         return rD
 
     def add(self, sessionId, statusOp, **params):
-        """  Record a service session tracking record  -
+        """Record a service session tracking record  -
 
-             :param sessionId:  target session identifier
-             :param statusOp:   current operation for the tracking record
-             :param params:     additional payload of key-values for the tracking record.
+         :param sessionId:  target session identifier
+         :param statusOp:   current operation for the tracking record
+         :param params:     additional payload of key-values for the tracking record.
 
-            :rtype bool: True for success or False otherwise
+        :rtype bool: True for success or False otherwise
 
         """
         dd = {}
@@ -122,14 +118,13 @@ class ServiceHistory(object):
         return self.__serialize(tD, mode="a+b")
 
     def getHistory(self):
-        """  Return a dictionary image of all session tracking data for the current service user.
-        """
+        """Return a dictionary image of all session tracking data for the current service user."""
         return self.__deserialize()
 
     def getActivitySummary(self):
-        """  Create a summary of session activity for the service user.
+        """Create a summary of session activity for the service user.
 
-            :rtype dictionary:   dictionary of summary details -
+        :rtype dictionary:   dictionary of summary details -
         """
         tD = self.__deserialize()
         #
