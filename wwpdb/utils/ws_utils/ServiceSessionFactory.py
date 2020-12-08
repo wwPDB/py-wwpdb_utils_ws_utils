@@ -59,7 +59,7 @@ class ServiceSessionFactory(object):
         return self.__uid
 
     def assignId(self):
-        self.__uid = hashlib.sha1(repr(time.time())).hexdigest()
+        self.__uid = hashlib.sha1(repr(time.time()).encode('utf-8')).hexdigest()
         return self.__uid
 
     def __getPath(self, relative=False):
