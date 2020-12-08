@@ -1,8 +1,8 @@
 import unittest
 from wwpdb.utils.ws_utils.ServiceSessionFactory import ServiceSessionFactory
 
-class ServiceSessionFactoryTests(unittest.TestCase):
 
+class ServiceSessionFactoryTests(unittest.TestCase):
     def test_assignid(self):
         ssf = ServiceSessionFactory()
         ret = ssf.getId()
@@ -11,5 +11,5 @@ class ServiceSessionFactoryTests(unittest.TestCase):
         self.assertIsNotNone(ret)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
