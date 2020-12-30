@@ -256,9 +256,15 @@ class JwtTokenUtils(TokenUtilsBase):
         }
         token = jwt.encode(payload, secretKey, algorithm=algorithm)
         #
-        # 'utf-8' or 'unicode_escape'?
+        # PyJwt 2.x return string
         #
-        return token.decode(encoding)
+        if int(jwt.__version__.split(".")[0]) >= 2:
+            return token
+        else:
+            #
+            # 'utf-8' or 'unicode_escape'?
+            #
+            return token.decode(encoding)
 
     def __parseToken(self, token, secretKey="secretvalue", algorithm="HS256"):
         return jwt.decode(token, secretKey, algorithms=algorithm)
@@ -276,7 +282,7 @@ class JwtTokenUtils(TokenUtilsBase):
         except jwt.DecodeError:
             errorMessage = "API access token is invalid"
             errorCode = self.__tokenErrorCode
-        except jwt.ExpiredSignature:
+        except jwt.ExpiredSignatureError:
             errorMessage = "API access token has expired"
             errorCode = self.__tokenErrorCode
         except:  # noqa: E722 pylint: disable=bare-except
@@ -334,7 +340,7 @@ class JwtTokenReader(object):
         except jwt.DecodeError:
             errorMessage = "API access token is invalid"
             errorCode = self.__tokenErrorCode
-        except jwt.ExpiredSignature:
+        except jwt.ExpiredSignatureError:
             errorMessage = "API access token has expired"
             errorCode = self.__tokenErrorCode
         except:  # noqa: E722 pylint: disable=bare-except
