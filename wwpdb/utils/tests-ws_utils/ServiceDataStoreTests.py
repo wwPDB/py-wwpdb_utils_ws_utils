@@ -50,7 +50,7 @@ class ServiceDataStoreTests(unittest.TestCase):
             os.makedirs(self.__sessdir)
 
     def testInstantiate(self):
-        """ Test acquiring new or existing token"""
+        """Test acquiring new or existing token"""
         tfile = os.path.join(self.__sessdir, "test1-session-store.pic")
         if os.path.exists(tfile):
             os.unlink(tfile)

@@ -47,7 +47,6 @@ class ServiceResponse(object):
           if these are not set.
 
         """
-        self.__debug = False
         self.__injectStatus = injectStatus
         self._cD = self.__setup(returnFormat)
 

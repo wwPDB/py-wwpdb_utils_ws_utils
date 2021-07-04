@@ -45,7 +45,6 @@ class ServiceRequestBase(object):
         if paramDict is None:
             paramDict = {}
         self.__dict = paramDict
-        self.__debug = False
 
     def __outputList(self):
         sL = []

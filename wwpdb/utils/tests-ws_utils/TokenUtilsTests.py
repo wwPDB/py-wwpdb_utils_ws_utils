@@ -62,7 +62,7 @@ class TokenUtilsTests(unittest.TestCase):
         self.__tokenPrefix = "VALWS"
 
     def testGetToken(self):
-        """ Test acquiring new or existing token"""
+        """Test acquiring new or existing token"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("some.email@noreply.org")
         logging.debug("tokenid %r is %r ", tokenId, jwtToken)
@@ -75,7 +75,7 @@ class TokenUtilsTests(unittest.TestCase):
         self.assertIsNotNone(tU.getFilePath())
 
     def testTokenTimes(self):
-        """ Test token access creation and expiration dates"""
+        """Test token access creation and expiration dates"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
         logging.debug("tokenid %r is %r ", tokenId, jwtToken)
@@ -116,7 +116,7 @@ class TokenUtilsTests(unittest.TestCase):
         self.assertEqual(tokenId, tId)
 
     def testRemoveTokens(self):
-        """Test remove many tokens by token id """
+        """Test remove many tokens by token id"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in xrange(0, 100):
             tokenId, jwtToken = tU.getToken("john.westbrook%04d@rcsb.org" % i)
@@ -127,7 +127,7 @@ class TokenUtilsTests(unittest.TestCase):
 
     # Disabled - we do not want email in automated test
     def NoSendToken(self):  # pragma: no cover
-        """Test acquire new or existing token and send token to recipient """
+        """Test acquire new or existing token and send token to recipient"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
         logging.debug("tokenid %r is %r ", tokenId, jwtToken)
@@ -159,7 +159,7 @@ This is more multi-line text
         self.assertEqual(ok, True)
 
     def testParseAuth(self):
-        """ Test parsing authorization"""
+        """Test parsing authorization"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("some.email@noreply.org")
 
@@ -188,7 +188,7 @@ This is more multi-line text
         self.assertEqual(tD["sub"], tokenId)
 
     def testTokenReaderParseToken(self):
-        """ Test parsing tokens from JwtTokenReader"""
+        """Test parsing tokens from JwtTokenReader"""
 
         tR = JwtTokenReader()
         # Validate token
@@ -209,7 +209,7 @@ This is more multi-line text
         self.assertEqual(tD["errorMessage"], "API access token has expired")
 
     def testTokenUtilsParseToken(self):
-        """ Test parsing tokens from TokenUtils"""
+        """Test parsing tokens from TokenUtils"""
 
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
 
@@ -229,7 +229,7 @@ This is more multi-line text
         self.assertEqual(tD["errorMessage"], "API access token has expired")
 
     def testTokenUtilsParseAuth(self):
-        """ Test parsing authorization"""
+        """Test parsing authorization"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("some.email@noreply.org")  # pylint: disable=unused-variable
 

@@ -49,7 +49,7 @@ class ServiceHistoryTests(unittest.TestCase):
             os.makedirs(self.__histpath)  # pragma: no cover
 
     def testHistory(self):
-        """ Test acquiring new or existing token"""
+        """Test acquiring new or existing token"""
         tfile = os.path.join(self.__histpath, "history-session-store.pic")
         if os.path.exists(tfile):
             os.unlink(tfile)

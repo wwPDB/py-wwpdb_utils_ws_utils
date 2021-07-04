@@ -39,8 +39,6 @@ class ServiceDataStore(object):
         self.__filePrefix = prefix if prefix is not None else "general"
         self.__sessionPath = sessionPath
         self.__filePath = None
-        self.__timeOutSeconds = 8.0
-        self.__retrySeconds = 0.2
         #
         lockutils.set_defaults(self.__sessionPath)
         #

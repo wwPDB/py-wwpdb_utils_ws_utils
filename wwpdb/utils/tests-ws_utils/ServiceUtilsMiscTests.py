@@ -46,7 +46,7 @@ class ServiceUtilsMiscTests(unittest.TestCase):
         pass
 
     def testMD5(self):
-        """ Test MD5 calculation"""
+        """Test MD5 calculation"""
         md5 = getMD5(__file__, block_size=50)
         sys.stderr.write("MD5 size=50:  %s\n" % md5)
         md5_2 = getMD5(__file__)

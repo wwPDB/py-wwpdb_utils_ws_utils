@@ -48,20 +48,20 @@ class ServiceResponseTests(unittest.TestCase):
         self.__sr = ServiceResponse()
 
     def testSetError(self):
-        """ Test setting error"""
+        """Test setting error"""
         self.assertFalse(self.__sr.isError())
         self.__sr.setError(statusCode=200, msg="Some error")
         self.assertTrue(self.__sr.isError())
 
     def testSetData(self):
-        """ Test setting data"""
+        """Test setting data"""
         self.assertEqual(self.__sr.getData(), {})
         dt = {"1": 2}
         self.__sr.setData(dt)
         self.assertEqual(self.__sr.getData(), dt)
 
     def testHtml(self):
-        """ Test html list actions"""
+        """Test html list actions"""
         self.__sr.setHtmlList()
         self.__sr.setHtmlList(["Test file is foo.py", "Of two items"])
         self.__sr.appendHtmlList(["Some other data", "with two items"])
