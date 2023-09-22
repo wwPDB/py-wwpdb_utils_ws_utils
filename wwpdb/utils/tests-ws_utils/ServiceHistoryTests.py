@@ -72,6 +72,12 @@ class ServiceHistoryTests(unittest.TestCase):
         self.assertEqual(len(hist[sessID]), 2)
         self.assertEqual(len(hist[sessID2]), 1)
 
+        hist = sh.getHistory(lock=False)
+        self.assertEqual(len(hist), 2)
+        # sessID/op unique tuples
+        self.assertEqual(len(hist[sessID]), 2)
+        self.assertEqual(len(hist[sessID2]), 1)
+
         # Add completion
         self.assertTrue(sh.add(sessID, "completed"))
         self.assertTrue(sh.add(sessID, "failed"))

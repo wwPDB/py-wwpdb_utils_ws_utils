@@ -23,6 +23,7 @@ except ImportError:
     import pickle
 import os.path
 import copy
+import time
 import datetime
 import dateutil.parser
 
@@ -45,6 +46,8 @@ class ServiceHistory(object):
         self.__filePath = None
         self.__timeOutSeconds = 2.0
         self.__retrySeconds = 0.1
+        self.__unlocked_maxretry = 5  # Unlocked status history retrieval return for pickle erro
+        self.__unlocked_retrySeconds = 3  # Unlocked status history return sleep
         self.__setup()
 
     def __setup(self):
@@ -70,29 +73,39 @@ class ServiceHistory(object):
         return False
 
     def __deserialize(self):
-        """Internal method to recover session history data from persistent store."""
+        """Internal method to recover session history data from persistent store. Locks file"""
         rD = {}
         with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
-            try:
-                if not os.access(self.__filePath, os.R_OK):
-                    logging.warning("No data store in path %r ", self.__filePath)
-                    return rD
-            except:  # noqa: E722 pylint: disable=bare-except
-                pass
-            try:
-                with open(self.__filePath, "rb") as fb:
-                    while True:
-                        # process each record and quit at eof
-                        try:
-                            d = pickle.load(fb)
-                            # logger.info("Read activity record %r" % d)
-                            if d["sid"] not in rD:
-                                rD[d["sid"]] = {}
-                            rD[d["sid"]][d["op"]] = d["data"]
-                        except EOFError:
-                            break
-            except:  # noqa: E722 pylint: disable=bare-except
-                logger.exception("Deserialization failure with file %s", self.__filePath)
+            return self.__deserialize_data()
+        return rD
+
+    def __deserialize_data(self, raiseExc=False):
+        """Derserialize the history data in the file. Might be locked or not.
+        If raiseExc set raise exception on parsing pickle error"""
+        rD = {}
+        try:
+            if not os.access(self.__filePath, os.R_OK):
+                logging.warning("No data store in path %r ", self.__filePath)
+                return rD
+        except:  # noqa: E722 pylint: disable=bare-except
+            pass
+        try:
+            with open(self.__filePath, "rb") as fb:
+                while True:
+                    # process each record and quit at eof
+                    try:
+                        d = pickle.load(fb)
+                        # logger.info("Read activity record %r" % d)
+                        if d["sid"] not in rD:
+                            rD[d["sid"]] = {}
+                        rD[d["sid"]][d["op"]] = d["data"]
+                    except EOFError:
+                        break
+        except Exception as exc:  # noqa: E722 pylint: disable=bare-except
+            if raiseExc:
+                logger.error("Deserialization failure with file %s", self.__filePath)
+                raise exc
+            logger.exception("Deserialization failure with file %s", self.__filePath)
 
         return rD
 
@@ -117,9 +130,25 @@ class ServiceHistory(object):
         #
         return self.__serialize(tD, mode="a+b")
 
-    def getHistory(self):
-        """Return a dictionary image of all session tracking data for the current service user."""
-        return self.__deserialize()
+    def getHistory(self, lock=True):
+        """Return a dictionary image of all session tracking data for the current service user.
+        If lock is True, use lockging"""
+        if lock:
+            return self.__deserialize()
+        else:
+            # Unlocked - retry on pickle parsing failure
+            cnt = 0
+            while (cnt < self.__unlocked_maxretry):
+                try:
+                    rd = self.__deserialize_data(raiseExc=True)
+                    return rd
+                except pickle.UnpicklingError:
+                    cnt += 1
+                    logging.error("Could not unpickle unlocked, retry %s", cnt)
+                    time.sleep(self.__unlocked_retrySeconds)
+            logging.error("Could not parse file.  return empty")
+            rD = {}
+            return rD
 
     def getActivitySummary(self):
         """Create a summary of session activity for the service user.
