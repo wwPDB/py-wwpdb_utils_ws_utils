@@ -214,7 +214,7 @@ class JwtTokenUtils(TokenUtilsBase):
         #
         # self.__inputToken = self._reqObj.getValue('authorization').split()[1]
         #
-        serviceKey = self._cI.get("SITE_SERVICE_REGISTRATION_KEY", default=None)
+        serviceKey = self._cI.get("SITE_SERVICE_REGISTRATION_KEY", None)
         self.__serviceKey = serviceKey if serviceKey else "secretvalue"
         self.__tokenErrorCode = 401
 

@@ -165,6 +165,7 @@ class ServiceHistory(object):
         sL = []
         #
         try:
+            tStart = datetime.datetime(1969, 1, 1).isoformat()  # should always have a "created" in loop
             for sId in tD:
                 sD = tD[sId]
                 deltaSeconds = 0
