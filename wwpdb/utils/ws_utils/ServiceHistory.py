@@ -26,6 +26,7 @@ import copy
 import time
 import datetime
 import dateutil.parser
+import sys
 
 from operator import itemgetter
 from wwpdb.utils.ws_utils.ServiceLockFile import ServiceLockFile
@@ -123,7 +124,11 @@ class ServiceHistory(object):
         if params:
             dd = copy.deepcopy(params)
         if self.__useUtc:
-            dd["tiso"] = datetime.datetime.utcnow().isoformat()
+            if sys.version_info[0] > 2:
+                dtNow = datetime.datetime.now(datetime.timezone.utc)
+            else:
+                dtNow = datetime.datetime.utcnow()
+            dd["tiso"] = dtNow.isoformat()
         else:
             dd["tiso"] = datetime.datetime.now().isoformat()
         tD = {"sid": sessionId, "op": statusOp, "data": dd}
@@ -182,14 +187,16 @@ class ServiceHistory(object):
                         failedCount += 1
                         tEnd = sD["failed"]["tiso"]
                         st = "failed"
-                        dt = dateutil.parser.parse(tEnd) - dateutil.parser.parse(tBegin)
-                        deltaSeconds = dt.total_seconds()
+                        dEnd = dateutil.parser.parse(tEnd)
+                        dStart = dateutil.parser.parse(tBegin)
+                        deltaSeconds = self.__deltatime(dEnd, dStart).total_seconds()
                     if "completed" in sD:
                         completedCount += 1
                         tEnd = sD["completed"]["tiso"]
                         st = "completed"
-                        dt = dateutil.parser.parse(tEnd) - dateutil.parser.parse(tBegin)
-                        deltaSeconds = dt.total_seconds()
+                        dEnd = dateutil.parser.parse(tEnd)
+                        dStart = dateutil.parser.parse(tBegin)
+                        deltaSeconds = self.__deltatime(dEnd, dStart).total_seconds()
 
                     sL.append((sId, tStart, st, deltaSeconds))
 
@@ -203,3 +210,23 @@ class ServiceHistory(object):
         rD["completed_count"] = completedCount
         rD["session_list"] = ssL
         return rD
+
+    def __deltatime(self, d1, d2):
+        """Handles delta time for mix of tz aware and naive types
+        Returns d1-d2"""
+
+        if sys.version_info[0] < 3:
+            return d1 - d2
+
+        if (d1.tzinfo is None and d2.tzinfo is None) \
+           or (d1.tzinfo is not None and d2.tzinfo is not None):
+            return d1 - d2
+
+        # Else need to convert to tz aware.
+        if d1.tzinfo is None:
+            d1 = d1.replace(tzinfo=datetime.timezone.utc)
+
+        if d2.tzinfo is None:
+            d2 = d2.replace(tzinfo=datetime.timezone.utc)
+
+        return d1 - d2

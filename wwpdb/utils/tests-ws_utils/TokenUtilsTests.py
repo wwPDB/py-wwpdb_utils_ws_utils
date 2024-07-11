@@ -30,6 +30,7 @@ import os
 import platform
 import datetime
 import logging
+import sys
 from past.builtins import xrange
 
 from wwpdb.utils.ws_utils.TokenUtils import JwtTokenUtils, JwtTokenReader
@@ -80,15 +81,25 @@ class TokenUtilsTests(unittest.TestCase):
         tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
         logging.debug("tokenid %r is %r ", tokenId, jwtToken)
         tD = tU.parseToken(jwtToken)
-        now = datetime.datetime.utcnow()
+        if sys.version_info[0] > 2:
+            now = datetime.datetime.now(datetime.timezone.utc)
+        else:
+            now = datetime.datetime.utcnow()
 
         createS = tD["iat"]
-        createT = datetime.datetime.utcfromtimestamp(createS)
+        if sys.version_info[0] > 2:
+            createT = datetime.datetime.fromtimestamp(createS, datetime.timezone.utc)
+        else:
+            createT = datetime.datetime.utcfromtimestamp(createS)
+
         difT = now - createT
         logging.debug("token age %f seconds", difT.seconds)
 
         expS = tD["exp"]
-        expT = datetime.datetime.utcfromtimestamp(expS)
+        if sys.version_info[0] > 2:
+            expT = datetime.datetime.fromtimestamp(expS, datetime.timezone.utc)
+        else:
+            expT = datetime.datetime.utcfromtimestamp(expS)
         difT = expT - now
         logging.debug("token expires in %f days", difT.days)
         self.assertGreaterEqual(difT.days, 29)

@@ -27,6 +27,7 @@ __version__ = "V0.07"
 
 import os
 import datetime
+import sys
 
 try:
     import cPickle as pickle
@@ -244,15 +245,23 @@ class JwtTokenUtils(TokenUtilsBase):
         jwtToken = self.__create_token(tokenId, self.__serviceKey, expireDays=expireDays)
         return tokenId, jwtToken
 
+    def __getutcnow(self):
+        """Returns timezone aware utc now if system allows"""
+        if sys.version_info[0] > 2:
+            dtNow = datetime.datetime.now(datetime.timezone.utc)
+        else:
+            dtNow = datetime.datetime.utcnow()
+        return dtNow
+
     def __create_token(self, tokenId, secretKey, expireDays=30, algorithm="HS256", encoding="utf-8"):
         payload = {
             #        using the standard JWT claim keys --
             # subject id
             "sub": tokenId,
             # creation datetime
-            "iat": datetime.datetime.utcnow(),
+            "iat": self.__getutcnow(),
             # expiration datetime
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=expireDays),
+            "exp": self.__getutcnow() + datetime.timedelta(days=expireDays),
         }
         token = jwt.encode(payload, secretKey, algorithm=algorithm)
         #
