@@ -9,6 +9,7 @@
 Accessors to encapsulate common service session data management details --
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -20,17 +21,20 @@ import logging
 logger = logging.getLogger()
 
 
-class ServiceSessionState(object):
+class ServiceSessionState:
     """Accessors to encapsulate common service session details --"""
-
-    #
 
     def __init__(self):
         """"""
-        #
         self.__D = {}
-        self.__strKeyList = ["servicename", "serviceargs", "statustext", "errormessage", "warningmessage", "responseformat"]
-        #
+        self.__strKeyList = [
+            "servicename",
+            "serviceargs",
+            "statustext",
+            "errormessage",
+            "warningmessage",
+            "responseformat",
+        ]
         self.__boolKeyList = ["errorflag", "warningflag"]
         self.clear()
         #
@@ -38,10 +42,7 @@ class ServiceSessionState(object):
         self.__A = {}
         self.__uFL = []
         self.__dFL = []
-        #
         self.clear()
-
-    #
 
     def clear(self):
         self.__A = {}
@@ -53,7 +54,7 @@ class ServiceSessionState(object):
         for ky in self.__boolKeyList:
             self.__D[ky] = False
 
-    def setAppDataDict(self, dictval, errFlag=False, format="json"):  # pylint: disable=redefined-builtin
+    def setAppDataDict(self, dictval, errFlag=False, format="json"):  # noqa: A002 pylint: disable=redefined-builtin
         try:
             self.__D["responseformat"] = format
             self.__D["errorflag"] = errFlag
@@ -107,7 +108,7 @@ class ServiceSessionState(object):
             logging.exception("FAILING")
             return False
 
-    def setResponseFormat(self, format="json"):  # pylint: disable=redefined-builtin
+    def setResponseFormat(self, format="json"):  # noqa: A002 pylint: disable=redefined-builtin
         self.__D["responseformat"] = format
 
     def getResponseFormat(self):
@@ -134,15 +135,12 @@ class ServiceSessionState(object):
     def setServiceCompletionFlag(self, boolFlag):
         self.__D["errorflag"] = not boolFlag
 
-    #
-    def setServiceError(self, msg, errFlag=True, format="json"):  # pylint: disable=redefined-builtin
+    def setServiceError(self, msg, errFlag=True, format="json"):  # noqa: A002 pylint: disable=redefined-builtin
         self.__D["errorflag"] = errFlag
         self.__D["errormessage"] = msg
         self.__D["responseformat"] = format
 
-    #
-
-    def setServiceWarning(self, msg, warnFlag=True, format="json"):  # pylint: disable=redefined-builtin
+    def setServiceWarning(self, msg, warnFlag=True, format="json"):  # noqa: A002 pylint: disable=redefined-builtin
         self.__D["warningflag"] = warnFlag
         self.__D["warningmessage"] = msg
         self.__D["responseformat"] = format
@@ -170,6 +168,3 @@ class ServiceSessionState(object):
 
     def getServiceWarningMessage(self):
         return self.__D["warningmessage"]
-
-
-#

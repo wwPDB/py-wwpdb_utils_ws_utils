@@ -9,39 +9,34 @@
 Methods to manage service session history tracking  --
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
-import logging
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-import os.path
 import copy
-import time
 import datetime
-import dateutil.parser
+import logging
+import os.path
+import pickle  # noqa: S403
 import sys
-
+import time
 from operator import itemgetter
+
+import dateutil.parser
+
 from wwpdb.utils.ws_utils.ServiceLockFile import ServiceLockFile
 
 logger = logging.getLogger()
 
 
-class ServiceHistory(object):
+class ServiceHistory:
     """Methods to manage service session history tracking"""
-
-    #
 
     def __init__(self, historyPath, useUTC=False):
         """"""
-        #
         self.__useUtc = useUTC
         self.__historyPath = historyPath
         self.__filePath = None
@@ -61,10 +56,11 @@ class ServiceHistory(object):
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING for filePath %r", self.__filePath)
 
-    #
     def __serialize(self, iD, mode="wb"):
         """Internal method to write session history data to persistent store."""
-        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
+        with ServiceLockFile(
+            self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds
+        ) as lock:  # noqa: F841 pylint: disable=unused-variable
             try:
                 with open(self.__filePath, mode) as fb:
                     pickle.dump(iD, fb, self.__pickleProtocol)
@@ -76,7 +72,9 @@ class ServiceHistory(object):
     def __deserialize(self):
         """Internal method to recover session history data from persistent store. Locks file"""
         rD = {}
-        with ServiceLockFile(self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds) as lock:  # noqa: F841 pylint: disable=unused-variable
+        with ServiceLockFile(
+            self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds
+        ) as lock:  # noqa: F841 pylint: disable=unused-variable
             return self.__deserialize_data()
         return rD
 
@@ -95,7 +93,7 @@ class ServiceHistory(object):
                 while True:
                     # process each record and quit at eof
                     try:
-                        d = pickle.load(fb)
+                        d = pickle.load(fb)  # noqa: S301
                         # logger.info("Read activity record %r" % d)
                         if d["sid"] not in rD:
                             rD[d["sid"]] = {}
@@ -105,7 +103,7 @@ class ServiceHistory(object):
         except Exception as exc:  # noqa: E722 pylint: disable=bare-except
             if raiseExc:
                 logger.error("Deserialization failure with file %s", self.__filePath)
-                raise exc
+                raise exc  # noqa: TRY201
             logger.exception("Deserialization failure with file %s", self.__filePath)
 
         return rD
@@ -127,12 +125,11 @@ class ServiceHistory(object):
             if sys.version_info[0] > 2:
                 dtNow = datetime.datetime.now(datetime.timezone.utc)
             else:
-                dtNow = datetime.datetime.utcnow()
+                dtNow = datetime.datetime.utcnow()  # noqa: DTZ003
             dd["tiso"] = dtNow.isoformat()
         else:
-            dd["tiso"] = datetime.datetime.now().isoformat()
+            dd["tiso"] = datetime.datetime.now().isoformat()  # noqa: DTZ005 - datetime naieve
         tD = {"sid": sessionId, "op": statusOp, "data": dd}
-        #
         return self.__serialize(tD, mode="a+b")
 
     def getHistory(self, lock=True):
@@ -140,20 +137,19 @@ class ServiceHistory(object):
         If lock is True, use lockging"""
         if lock:
             return self.__deserialize()
-        else:
-            # Unlocked - retry on pickle parsing failure
-            cnt = 0
-            while (cnt < self.__unlocked_maxretry):
-                try:
-                    rd = self.__deserialize_data(raiseExc=True)
-                    return rd
-                except pickle.UnpicklingError:
-                    cnt += 1
-                    logging.error("Could not unpickle unlocked, retry %s", cnt)
-                    time.sleep(self.__unlocked_retrySeconds)
-            logging.error("Could not parse file.  return empty")
-            rD = {}
-            return rD
+        # Unlocked - retry on pickle parsing failure
+        cnt = 0
+        while cnt < self.__unlocked_maxretry:
+            try:
+                rd = self.__deserialize_data(raiseExc=True)
+                return rd
+            except pickle.UnpicklingError:
+                cnt += 1
+                logging.error("Could not unpickle unlocked, retry %s", cnt)
+                time.sleep(self.__unlocked_retrySeconds)
+        logging.error("Could not parse file.  return empty")
+        rD = {}
+        return rD
 
     def getActivitySummary(self):
         """Create a summary of session activity for the service user.
@@ -161,16 +157,14 @@ class ServiceHistory(object):
         :rtype dictionary:   dictionary of summary details -
         """
         tD = self.__deserialize()
-        #
         rD = {}
         sessionCount = 0
         submittedCount = 0
         completedCount = 0
         failedCount = 0
         sL = []
-        #
         try:
-            tStart = datetime.datetime(1969, 1, 1).isoformat()  # should always have a "created" in loop
+            tStart = datetime.datetime(1969, 1, 1).isoformat()  # should always have a "created" in loop  # noqa: DTZ001
             for sId in tD:
                 sD = tD[sId]
                 deltaSeconds = 0
@@ -182,7 +176,6 @@ class ServiceHistory(object):
                     submittedCount += 1
                     tBegin = sD["submitted"]["tiso"]
                     st = "submitted"
-                    #
                     if "failed" in sD:
                         failedCount += 1
                         tEnd = sD["failed"]["tiso"]
@@ -203,7 +196,6 @@ class ServiceHistory(object):
             ssL = sorted(sL, key=itemgetter(1))
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("summary construction failing")
-        #
         rD["session_count"] = sessionCount
         rD["submitted_count"] = submittedCount
         rD["failed_count"] = failedCount
@@ -218,8 +210,7 @@ class ServiceHistory(object):
         if sys.version_info[0] < 3:
             return d1 - d2
 
-        if (d1.tzinfo is None and d2.tzinfo is None) \
-           or (d1.tzinfo is not None and d2.tzinfo is not None):
+        if (d1.tzinfo is None and d2.tzinfo is None) or (d1.tzinfo is not None and d2.tzinfo is not None):
             return d1 - d2
 
         # Else need to convert to tz aware.

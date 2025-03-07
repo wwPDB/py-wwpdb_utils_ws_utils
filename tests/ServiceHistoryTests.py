@@ -16,7 +16,6 @@ This software is provided under a Creative Commons Attribution 3.0 Unported
 License described at http://creativecommons.org/licenses/by/3.0/.
 
 """
-from __future__ import division, absolute_import, print_function
 
 __docformat__ = "restructuredtext en"
 __author__ = "Ezra Peisach"
@@ -25,10 +24,10 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import unittest
+import logging
 import os
 import platform
-import logging
+import unittest
 
 from wwpdb.utils.ws_utils.ServiceHistory import ServiceHistory
 
@@ -88,7 +87,7 @@ class ServiceHistoryTests(unittest.TestCase):
         self.assertEqual(summ["submitted_count"], 1)
         self.assertEqual(summ["failed_count"], 1)
         self.assertEqual(summ["completed_count"], 1)
-        print(summ)
+        print(summ)  # noqa: T201
 
 
 def suiteServiceHistory():  # pragma: no cover

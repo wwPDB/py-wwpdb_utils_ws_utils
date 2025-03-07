@@ -16,6 +16,7 @@ This software is provided under a Creative Commons Attribution 3.0 Unported
 License described at http://creativecommons.org/licenses/by/3.0/.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "Ezra Peisach"
 __email__ = "peisach@rcsb.rutgers.edu"
@@ -23,11 +24,11 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import unittest
-import os
-import sys
-import platform
 import logging
+import os
+import platform
+import sys
+import unittest
 
 from wwpdb.utils.ws_utils.ServiceUtilsMisc import getMD5
 

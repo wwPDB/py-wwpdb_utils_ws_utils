@@ -16,7 +16,6 @@ This software is provided under a Creative Commons Attribution 3.0 Unported
 License described at http://creativecommons.org/licenses/by/3.0/.
 
 """
-from __future__ import division, absolute_import, print_function
 
 __docformat__ = "restructuredtext en"
 __author__ = "Ezra Peisach"
@@ -25,11 +24,11 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import unittest
-import sys
+import logging
 import os
 import platform
-import logging
+import sys
+import unittest
 
 from wwpdb.utils.ws_utils.ServiceResponse import ServiceResponse
 

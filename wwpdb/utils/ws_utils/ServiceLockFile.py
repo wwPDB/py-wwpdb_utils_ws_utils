@@ -12,19 +12,19 @@ Class implementing a cross-platform file locking strategy using an auxiliary loc
 
 """
 
-import os
-import time
 import errno
 import logging
+import os
+import time
 
 logger = logging.getLogger()
 
 
-class LockFileTimeoutException(Exception):
+class LockFileTimeoutException(Exception):  # noqa: N818
     pass
 
 
-class ServiceLockFile(object):
+class ServiceLockFile:
     """A simple cross-platform file locking utilitiy class using an auxiliary
     lock file.
 
@@ -48,12 +48,10 @@ class ServiceLockFile(object):
         self.__isLocked = False
         self.__lockFilePath = os.path.join(filePath + ".lock")
         self.__filePath = filePath
-        #
         self.__timeoutSeconds = timeoutSeconds
         self.__retrySeconds = retrySeconds
         self.__debug = True
         self.__fd = None
-        #
 
     def acquire(self):
         """Create the lock if no lock file exists.  If a lockfile exists then
@@ -76,12 +74,16 @@ class ServiceLockFile(object):
                     raise
                 # handle timeout and retry -
                 if (time.time() - timeBegin) >= self.__timeoutSeconds:
-                    logger.debug("ServiceLockfile(acquire) Failed to acquire lock within timeout %r", self.__timeoutSeconds)
-                    raise LockFileTimeoutException("ServiceLockFile(acquire) Internal timeout of %d (seconds) exceeded for %s" % (self.__timeoutSeconds, self.__filePath))
+                    logger.debug(
+                        "ServiceLockfile(acquire) Failed to acquire lock within timeout %r", self.__timeoutSeconds
+                    )
+                    raise LockFileTimeoutException(
+                        "ServiceLockFile(acquire) Internal timeout of %d (seconds) exceeded for %s"
+                        % (self.__timeoutSeconds, self.__filePath)
+                    ) from None
                 if self.__debug:
                     logger.debug("Lock file retry for file %s", self.__lockFilePath)
                 time.sleep(self.__retrySeconds)
-        #
         self.__isLocked = True
 
     def release(self):

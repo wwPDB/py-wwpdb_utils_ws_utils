@@ -13,23 +13,24 @@
 Utilities to manage  web application upload tasks.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.09"
 
-import sys
+import logging
 import ntpath
 import os
-import types
 import shutil
-import logging
+import sys
+import types
 
 logger = logging.getLogger()
 
 
-class ServiceUploadUtils(object):
+class ServiceUploadUtils:
     """
     This class encapsulates all of the web application upload tasks.
 
@@ -37,10 +38,8 @@ class ServiceUploadUtils(object):
 
     def __init__(self, reqObj=None):
         self.__reqObj = reqObj
-        #
         self.__sessionObj = self.__reqObj.getSessionObj()
         self.__sessionPath = self.__sessionObj.getPath()
-        #
         logger.debug(" - session id   %s\n", self.__sessionObj.getId())
         logger.debug(" - session path %s\n", self.__sessionPath)
 
@@ -51,19 +50,16 @@ class ServiceUploadUtils(object):
 
         logger.debug("+WebUploadUtils.isFileUpLoad() fs  %r", fs)
         if sys.version_info[0] < 3:
-            if (fs is None) or (isinstance(fs, types.StringType)) or (isinstance(fs, types.UnicodeType)):  # noqa: E722 pylint: disable=no-member
+            if isinstance(fs, (types.StringType, types.UnicodeType)):  # noqa: E722 pylint: disable=no-member
                 return False
-        else:
-            if (fs is None) or (isinstance(fs, str)) or (isinstance(fs, bytes)):
-                return False
+        elif isinstance(fs, (bytes, str)):
+            return False
         return True
 
     def getUploadFileName(self, fileTag="file"):
         """Get the user supplied name of for the uploaded file -"""
-        #
 
         logger.debug("operation started")
-        #
         try:
             fs = self.__reqObj.getRawValue(fileTag)
 
@@ -71,14 +67,12 @@ class ServiceUploadUtils(object):
             logger.debug("- upload file descriptor fs =     %s", fs)
             formRequestFileName = str(fs.filename).strip()
 
-            #
             if formRequestFileName.find("\\") != -1:
                 uploadInputFileName = ntpath.basename(formRequestFileName)
             else:
                 uploadInputFileName = os.path.basename(formRequestFileName)
 
             logger.debug(" uploaded file name %s", str(uploadInputFileName))
-            #
             return uploadInputFileName
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("+WebUploadUtils.getUploadFileName() processing failed")
@@ -90,9 +84,7 @@ class ServiceUploadUtils(object):
 
         File is copied to user uploaded file or to the sessionFileName if this is provided.
         """
-        #
         logger.debug("- operation started")
-        #
         try:
             fs = self.__reqObj.getRawValue(fileTag)
 
@@ -100,7 +92,6 @@ class ServiceUploadUtils(object):
             # formRequestFileName = str(fs.filename).strip().lower()
             formRequestFileName = str(fs.filename).strip()
 
-            #
             if formRequestFileName.find("\\") != -1:
                 uploadInputFileName = ntpath.basename(formRequestFileName)
             else:
@@ -120,18 +111,14 @@ class ServiceUploadUtils(object):
             logger.debug("- upload input file name     %s", uploadInputFileName)
             logger.debug("- session target file path   %s", sessionInputFilePath)
             logger.debug("- session target file name   %s", sessionInputFileName)
-            #
             with open(sessionInputFilePath, "wb") as outfile:
                 outfile.write(fs.file.read())
-            #
             if uncompress and sessionInputFilePath.endswith(".gz"):
-
                 logger.debug("-uncompressing file %s", str(sessionInputFilePath))
                 self.__copyGzip(sessionInputFilePath, sessionInputFilePath[:-3])
                 sessionInputFileName = sessionInputFileName[:-3]
 
             logger.debug("Uploaded file %s", str(sessionInputFileName))
-            #
             return sessionInputFileName
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("File upload processing failed")
@@ -166,13 +153,12 @@ class ServiceUploadUtils(object):
 
             if ignoreVersion and len(fL) > 2:
                 tExt = fL[-1]
-                if (tExt.startswith("V") or tExt.startswith("v")) and tExt[1:].isdigit():
+                if tExt.startswith(("V", "v")) and tExt[1:].isdigit():
                     fExt = fL[-2]
                 else:
                     fExt = tExt
-            else:
-                if len(fL) > 1:
-                    fExt = fL[-1]
+            elif len(fL) > 1:
+                fExt = fL[-1]
         except:  # noqa: E722 pylint: disable=bare-except
             pass
 
@@ -182,8 +168,6 @@ class ServiceUploadUtils(object):
         """Return the file identifier and identifier source if these can be deduced from
         the input file name.   Returned values are in uppercase.
         """
-        #
-        #
         fId = None
         fType = None
         if fileName is None or len(fileName) < 1:
@@ -220,7 +204,7 @@ class ServiceUploadUtils(object):
         """"""
         try:
             cmd = " gzip -cd  %s > %s " % (inpFilePath, outFilePath)
-            os.system(cmd)
+            os.system(cmd)  # noqa: S605
             return True
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("uncompress failing")

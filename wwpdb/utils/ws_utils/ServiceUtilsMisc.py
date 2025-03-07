@@ -11,7 +11,6 @@ Utility functions supporting web service classes.
 """
 
 import hashlib
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ def getMD5(path, block_size=4096, hr=True):
         > Block size:               4096
 
     """
-    md5 = hashlib.md5()
+    md5 = hashlib.md5()  # noqa: S324
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(block_size), b""):
             md5.update(chunk)

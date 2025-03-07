@@ -16,7 +16,6 @@ This software is provided under a Creative Commons Attribution 3.0 Unported
 License described at http://creativecommons.org/licenses/by/3.0/.
 
 """
-from __future__ import division, absolute_import, print_function
 
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
@@ -25,16 +24,15 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import unittest
-import os
-import platform
 import datetime
 import logging
+import os
+import platform
 import sys
-from past.builtins import xrange
+import unittest
 
-from wwpdb.utils.ws_utils.TokenUtils import JwtTokenUtils, JwtTokenReader
 from wwpdb.utils.ws_utils.ServiceSmtpUtils import ServiceSmtpUtils
+from wwpdb.utils.ws_utils.TokenUtils import JwtTokenReader, JwtTokenUtils
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 TOPDIR = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -55,7 +53,12 @@ class MyJwtTokenUtils(JwtTokenUtils):
         ssrdPath = os.path.join(TESTOUTPUT, "token_store.pic")
         ssrlPath = os.path.join(TESTOUTPUT)
 
-        super(MyJwtTokenUtils, self).__init__(siteId=siteId, tokenPrefix=tokenPrefix, site_service_registration_dir_path=ssrdPath, site_service_registration_lockdir_path=ssrlPath)
+        super(MyJwtTokenUtils, self).__init__(
+            siteId=siteId,
+            tokenPrefix=tokenPrefix,
+            site_service_registration_dir_path=ssrdPath,
+            site_service_registration_lockdir_path=ssrlPath,
+        )
 
 
 class TokenUtilsTests(unittest.TestCase):
@@ -84,13 +87,13 @@ class TokenUtilsTests(unittest.TestCase):
         if sys.version_info[0] > 2:
             now = datetime.datetime.now(datetime.timezone.utc)
         else:
-            now = datetime.datetime.utcnow()
+            now = datetime.datetime.utcnow()  # noqa: DTZ003
 
         createS = tD["iat"]
         if sys.version_info[0] > 2:
             createT = datetime.datetime.fromtimestamp(createS, datetime.timezone.utc)
         else:
-            createT = datetime.datetime.utcfromtimestamp(createS)
+            createT = datetime.datetime.utcfromtimestamp(createS)  # noqa: DTZ004
 
         difT = now - createT
         logging.debug("token age %f seconds", difT.seconds)
@@ -99,7 +102,7 @@ class TokenUtilsTests(unittest.TestCase):
         if sys.version_info[0] > 2:
             expT = datetime.datetime.fromtimestamp(expS, datetime.timezone.utc)
         else:
-            expT = datetime.datetime.utcfromtimestamp(expS)
+            expT = datetime.datetime.utcfromtimestamp(expS)  # noqa: DTZ004
         difT = expT - now
         logging.debug("token expires in %f days", difT.days)
         self.assertGreaterEqual(difT.days, 29)
@@ -107,7 +110,7 @@ class TokenUtilsTests(unittest.TestCase):
     def testReUseManyTokens(self):
         """Test the reuse of existing tokens based on an e-mail lookup"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
-        for i in xrange(0, 100):
+        for i in range(100):
             tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
             logging.debug("Iteration %3d tokenid %r is %r ", i, tokenId, jwtToken)
             tD = tU.parseToken(jwtToken)
@@ -118,7 +121,7 @@ class TokenUtilsTests(unittest.TestCase):
     def testGetManyTokens(self):
         """Test generate many new tokens and unique e-mail addresses"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
-        for i in xrange(0, 100):
+        for i in range(100):
             tokenId, jwtToken = tU.getToken("john.westbrook%04d@rcsb.org" % i)
             logging.debug("tokenid %r is %r ", tokenId, jwtToken)
             tD = tU.parseToken(jwtToken)
@@ -129,7 +132,7 @@ class TokenUtilsTests(unittest.TestCase):
     def testRemoveTokens(self):
         """Test remove many tokens by token id"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
-        for i in xrange(0, 100):
+        for i in range(100):
             tokenId, jwtToken = tU.getToken("john.westbrook%04d@rcsb.org" % i)
             logging.debug("tokenid %r is %r ", tokenId, jwtToken)
             self.assertTrue(tU.tokenIdExists(tokenId))
@@ -145,7 +148,6 @@ class TokenUtilsTests(unittest.TestCase):
         tD = tU.parseToken(jwtToken)
         # tId = tD['sub']
         logging.debug("token %r payload %r ", tokenId, tD)
-        #
         msgText = (
             """
 This is text is presented on multiple lines.
@@ -158,13 +160,18 @@ This is more multi-line text
         """
             % jwtToken
         )
-        #
         tokenFileName = "access-token.jwt"
         with open(tokenFileName, "wb") as outfile:
             outfile.write("%s" % jwtToken)
         smtpU = ServiceSmtpUtils()
         ok = smtpU.emailFiles(
-            "jwest@rcsb.rutgers.edu", "john.westbrook@rcsb.org", "TEST SUBJECT", msgText, fileList=[tokenFileName], textAsAttachment=jwtToken, textAttachmentName="text-token.jwt"
+            "jwest@rcsb.rutgers.edu",
+            "john.westbrook@rcsb.org",
+            "TEST SUBJECT",
+            msgText,
+            fileList=[tokenFileName],
+            textAsAttachment=jwtToken,
+            textAttachmentName="text-token.jwt",
         )
 
         self.assertEqual(ok, True)
@@ -189,7 +196,7 @@ This is more multi-line text
         rD = tR.parseAuth(aH)
         self.assertTrue(rD["errorFlag"])
 
-        aH = "bearer {}".format(jwtToken)
+        aH = f"bearer {jwtToken}"
         rD = tR.parseAuth(aH)
         self.assertFalse(rD["errorFlag"])
         self.assertEqual(rD["token"], jwtToken)
@@ -242,7 +249,7 @@ This is more multi-line text
     def testTokenUtilsParseAuth(self):
         """Test parsing authorization"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
-        tokenId, jwtToken = tU.getToken("some.email@noreply.org")  # pylint: disable=unused-variable
+        _tokenId, jwtToken = tU.getToken("some.email@noreply.org")  # pylint: disable=unused-variable
 
         aH = "nonbreaer"
         rD = tU.parseAuth(aH)
@@ -256,7 +263,7 @@ This is more multi-line text
         rD = tU.parseAuth(aH)
         self.assertTrue(rD["errorFlag"])
 
-        aH = "bearer {}".format(jwtToken)
+        aH = f"bearer {jwtToken}"
         rD = tU.parseAuth(aH)
         self.assertFalse(rD["errorFlag"])
         self.assertEqual(rD["token"], jwtToken)
@@ -277,7 +284,6 @@ def suiteTokenGen():  # pragma: no cover
 def suiteTokenSend():  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testSendToken"))
-    #
     return suite
 
 
@@ -285,7 +291,6 @@ def suiteTokenReader():  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testParseAuth"))
     suite.addTest(TokenUtilsTests("testTokenReaderParseToken"))
-    #
     return suite
 
 
