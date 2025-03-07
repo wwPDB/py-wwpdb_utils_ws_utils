@@ -2,5 +2,9 @@ PyJWT
 oslo.concurrency
 wwpdb.utils.config
 webob
+python-dateutil
 # For testing - xrange
 future
+# for mypy
+types-WebOb
+types-python-dateutil

@@ -28,7 +28,7 @@ import sys
 try:
     import json
 except ImportError:
-    import simplejson as json  # type: ignore[no-redef]
+    import simplejson as json  # type: ignore[no-redef,import-untyped]
 
 from wwpdb.utils.ws_utils.ServiceSessionFactory import ServiceSessionFactory
 

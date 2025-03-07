@@ -27,7 +27,7 @@ from webob import Response
 try:
     import json
 except ImportError:  # pragma: no cover
-    import simplejson as json  # type: ignore[no-redef]
+    import simplejson as json  # type: ignore[no-redef, import-untyped]
 
 try:
     # Python 2

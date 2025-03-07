@@ -29,6 +29,7 @@ dependencies = [
     "PyJWT",
     "webob",
     "wwpdb.utils.config",
+    "python-dateutil"
 ]
 
 [project.urls]
@@ -105,7 +106,7 @@ ignore = [
 # -------------------- default environment scripts ------------------
 [tool.hatch.envs.default]
 skip-install = true
-dependencies = ["mypy", "ruff >=0.6.9", "PyJWt", "oslo_concurrency"]
+dependencies = ["mypy", "ruff >=0.6.9", "PyJWt", "oslo_concurrency", "types-python-dateutil", "types-WebOb"]
 
 
 [tool.hatch.envs.default.scripts]
@@ -141,7 +142,7 @@ run = ["tox"]
 
 # -------------------------  Mypy disable ---------
 [[tool.mypy.overrides]]
-module = ["wwpdb.*"]
+module = ["wwpdb.*", "oslo_concurrency.*"]
 ignore_missing_imports = true
 
 [tool.mypy]
