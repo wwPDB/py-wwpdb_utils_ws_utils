@@ -16,7 +16,6 @@ This software is provided under a Creative Commons Attribution 3.0 Unported
 License described at http://creativecommons.org/licenses/by/3.0/.
 
 """
-from __future__ import division, absolute_import, print_function
 
 __docformat__ = "restructuredtext en"
 __author__ = "Ezra Peisach"
@@ -25,10 +24,10 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import unittest
+import logging
 import os
 import platform
-import logging
+import unittest
 
 from wwpdb.utils.ws_utils.ServiceSessionState import ServiceSessionState
 
@@ -72,13 +71,13 @@ class ServiceSessionStateTests(unittest.TestCase):
 
         # Upload/Download
         self.assertEqual(sst.getDownloadList(), [])
-        self.assertTrue(sst.setDownload("art.txt", "/tmp/art.txt"))
-        self.assertTrue(sst.setDownload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a"))
+        self.assertTrue(sst.setDownload("art.txt", "/tmp/art.txt"))  # noqa: S108
+        self.assertTrue(sst.setDownload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a"))  # noqa: S108
         self.assertEqual(len(sst.getDownloadList()), 2)
 
         self.assertEqual(sst.getUploadList(), [])
-        self.assertTrue(sst.setUpload("art.txt", "/tmp/art.txt"))
-        self.assertTrue(sst.setUpload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a"))
+        self.assertTrue(sst.setUpload("art.txt", "/tmp/art.txt"))  # noqa: S108
+        self.assertTrue(sst.setUpload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a"))  # noqa: S108
         self.assertEqual(len(sst.getUploadList()), 2)
 
         self.assertEqual(sst.getResponseFormat(), "files")

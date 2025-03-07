@@ -18,6 +18,7 @@ Common Deposition and Annotation System Project
 Copyright (c) wwPDB
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -26,27 +27,22 @@ __version__ = "V0.07"
 
 # import os
 # import sys
-import time
-
 # import types
 # import string
 # import traceback
 # import ntpath
-
 import logging
+import time
 
-#
 from wwpdb.utils.config.ConfigInfo import ConfigInfo
 from wwpdb.utils.ws_utils.ServiceDataStore import ServiceDataStore
-
-from wwpdb.utils.ws_utils.ServiceSessionState import ServiceSessionState
 from wwpdb.utils.ws_utils.ServiceHistory import ServiceHistory
+from wwpdb.utils.ws_utils.ServiceSessionState import ServiceSessionState
 
-#
 logger = logging.getLogger()
 
 
-class ServiceWorkerBase(object):
+class ServiceWorkerBase:
     def __init__(self, reqObj=None, sessionDataPrefix=None):
         """
         Base class supporting web application worker methods.
@@ -59,19 +55,16 @@ class ServiceWorkerBase(object):
         self._sessionId = None
         self._sessionPath = None
         self._rltvSessionPath = None
-        #
-        #
         self._siteId = self._reqObj.getSiteId()
         self._cI = ConfigInfo(self._siteId)
         #
         #  ServiceDataStore prefix for general session data -- used by _getSession()
-        self._sdsPrefix = sessionDataPrefix if sessionDataPrefix else "general"
+        self._sdsPrefix = sessionDataPrefix or "general"
         self._sds = None
         #
         # Service items include:
         # self.__class__.__name__,sys._getframe().f_code.co_name
         self.__appPathD = {}
-        #
 
     def _trackServiceStatus(self, op, **params):
         """Add a service history status tracking record.
@@ -82,7 +75,6 @@ class ServiceWorkerBase(object):
         """
         if params and "remote_addr" not in params:
             params["remote_addr"] = self._reqObj.getValue("remote_addr")
-        #
         sH = ServiceHistory(historyPath=self._reqObj.getSessionUserPath())
         return sH.add(sessionId=self._sessionId, statusOp=op, **params)
 
@@ -106,11 +98,9 @@ class ServiceWorkerBase(object):
         Operation output is packaged in a ServiceSessionState() object.
 
         """
-        #
         requestPath = None
         try:
-            requestPath = reqPath if reqPath else self._reqObj.getRequestPath()
-            #
+            requestPath = reqPath or self._reqObj.getRequestPath()
             if requestPath not in self.__appPathD:
                 # bail out if operation is unknown -
                 sst = ServiceSessionState()
@@ -126,7 +116,6 @@ class ServiceWorkerBase(object):
 
         return sst
 
-    #
     def _appendSessionStore(self, iD=None):
         """Dictionary of key value pairs will be appended to the session parameter store.
 
@@ -167,9 +156,7 @@ class ServiceWorkerBase(object):
 
     def _getSession(self, new=False, useContext=False, contextOverWrite=True, trackHistory=True):
         """Join existing session or create new session as required."""
-        #
         try:
-            #
             self._sObj = self._reqObj.getSessionObj(new=new)
             self._sessionId = self._sObj.getId()
             self._sessionPath = self._sObj.getPath()

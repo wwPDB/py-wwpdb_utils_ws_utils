@@ -12,6 +12,7 @@ WebRequest provides containers and accessors for managing request parameter info
 This is an application neutral version shared by UI modules --
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -19,22 +20,22 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import sys
-import os
+import contextlib
 import logging
+import os
+import sys
 
 try:
     import json
 except ImportError:
-    import simplejson as json
+    import simplejson as json  # type: ignore[no-redef,import-untyped]
 
 from wwpdb.utils.ws_utils.ServiceSessionFactory import ServiceSessionFactory
 
 logger = logging.getLogger()
 
 
-class ServiceRequestBase(object):
-
+class ServiceRequestBase:
     """Base container and accessors for input and output parameters and control information."""
 
     def __init__(self, paramDict=None):
@@ -63,12 +64,10 @@ class ServiceRequestBase(object):
         return self.__str__()
 
     def printIt(self, ofh=sys.stdout):
-        try:
-            ofh.write("%s" % self.__str__())
-        except:  # noqa: E722 pylint: disable=bare-except
-            pass
+        with contextlib.suppress(Exception):
+            ofh.write("%s" % self.__str__())  # noqa: PLC2801
 
-    def dump(self, format="text"):  # pylint: disable=unused-argument,redefined-builtin
+    def dump(self, format="text"):  # noqa: A002,ARG002  pylint: disable=unused-argument,redefined-builtin
         try:
             return "\n   ".join(self.__outputList())
         except:  # noqa: E722 pylint: disable=bare-except
@@ -100,7 +99,6 @@ class ServiceRequestBase(object):
     def getDictionary(self):
         return self.__dict
 
-    #
     def setValue(self, myKey, aValue):
         try:
             self.__dict[myKey] = [aValue]
@@ -127,7 +125,6 @@ class ServiceRequestBase(object):
         except:  # noqa: E722 pylint: disable=bare-except
             return False
 
-    #
     def _getRawValue(self, myKey):
         try:
             return self.__dict[myKey][0]
@@ -185,10 +182,8 @@ class ServiceRequest(ServiceRequestBase):
                 if iRp.startswith(self.__requestPrefix):
                     rp = iRp[len(self.__requestPrefix) :]
                     return rp
-                else:
-                    return iRp
-            else:
                 return iRp
+            return iRp
         except:  # noqa: E722 pylint: disable=bare-except
             logging.exception("Request path processing FAILED")
 
@@ -226,8 +221,6 @@ class ServiceRequest(ServiceRequestBase):
         except:  # noqa: E722 pylint: disable=bare-except
             return False
 
-    #
-
     def setSiteId(self, siteId):
         try:
             self.setValue("wwpdb_site_id", siteId)
@@ -259,11 +252,9 @@ class ServiceRequest(ServiceRequestBase):
                 sObj.makeSessionPath()
                 self.setValue("session_id", sObj.getId())
                 logger.debug("Creating new session %s ", sObj.getId())
-            else:
-                if self.exists("session_id"):
-                    logger.debug("Aquiring existing session %s ", self._getStringValue("session_id"))
-                    sObj.setId(uid=self._getStringValue("session_id"))
-            #
+            elif self.exists("session_id"):
+                logger.debug("Aquiring existing session %s ", self._getStringValue("session_id"))
+                sObj.setId(uid=self._getStringValue("session_id"))
             self.setValue("session_user_path", sObj.getSessionUserPath())
             logger.debug("Completed")
         except:  # noqa: E722 pylint: disable=bare-except

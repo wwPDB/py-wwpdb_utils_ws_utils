@@ -9,6 +9,7 @@
 Containers and accessors for managing responses to web service requests.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -16,21 +17,21 @@ __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
 
-import os
 import gzip
-import mimetypes
 import logging
-from webob import Response
+import mimetypes
+import os
 
+from webob import Response
 
 try:
     import json
 except ImportError:  # pragma: no cover
-    import simplejson as json
+    import simplejson as json  # type: ignore[no-redef, import-untyped]
 
 try:
     # Python 2
-    text_type = unicode
+    text_type = unicode  # type: ignore[name-defined]
 except NameError:
     # Python 3
     text_type = str
@@ -38,7 +39,7 @@ except NameError:
 logger = logging.getLogger()
 
 
-class ServiceResponse(object):
+class ServiceResponse:
     def __init__(self, returnFormat="json", injectStatus=True):
         """
         Manage content items to be transfered as part of the application response.
@@ -74,8 +75,6 @@ class ServiceResponse(object):
         cD["errorflag"] = False
         cD["statustext"] = ""
         cD["statuscode"] = 200
-        #
-        #
         return cD
 
     def isError(self):
@@ -86,14 +85,12 @@ class ServiceResponse(object):
         self._cD["statustext"] = msg
         self._cD["statuscode"] = statusCode
 
-    #
     def setData(self, dataObj=None):
         self._cD["datacontent"] = dataObj
 
     def getData(self):
         return self._cD["datacontent"]
 
-    #
     def setHtmlList(self, htmlList=None):
         if htmlList is None:
             htmlList = []
@@ -112,7 +109,12 @@ class ServiceResponse(object):
 
     def setHtmlTextFromTemplate(self, templateFilePath, webIncludePath, parameterDict=None, insertContext=False):
         pD = parameterDict if parameterDict is not None else {}
-        self._cD["htmlcontent"] = self.__processTemplate(templateFilePath=templateFilePath, webIncludePath=webIncludePath, parameterDict=pD, insertContext=insertContext)
+        self._cD["htmlcontent"] = self.__processTemplate(
+            templateFilePath=templateFilePath,
+            webIncludePath=webIncludePath,
+            parameterDict=pD,
+            insertContext=insertContext,
+        )
 
     def setHtmlLinkText(self, htmlText=""):
         self._cD["htmllinkcontent"] = htmlText
@@ -126,7 +128,7 @@ class ServiceResponse(object):
     def setTextFile(self, filePath):
         try:
             if os.path.exists(filePath):
-                with open(filePath, "r") as fin:
+                with open(filePath) as fin:
                     self._cD["textcontent"] = fin.read()
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("+setTextFile() File read failed %s\n", filePath)
@@ -160,7 +162,6 @@ class ServiceResponse(object):
                         self._cD["datafilecontent"] = fin.read()
                     self._cD["datafileName"] = fn
                     contentType, encodingType = self.getMimetypeAndEncoding(filePath)
-                #
                 self._cD["contentmimetype"] = contentType
                 self._cD["encodingtype"] = encodingType
                 if attachmentFlag:
@@ -173,7 +174,14 @@ class ServiceResponse(object):
                         self._cD["datafileName"] = fn[:-3]
                 if md5Digest:
                     self._cD["datafilechecksum"] = md5Digest
-                logger.debug("Serving %s as %s encoding %s att flag %r checksum %r\n", filePath, contentType, encodingType, attachmentFlag, md5Digest)
+                logger.debug(
+                    "Serving %s as %s encoding %s att flag %r checksum %r\n",
+                    filePath,
+                    contentType,
+                    encodingType,
+                    attachmentFlag,
+                    md5Digest,
+                )
                 return True
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("ResponseContent.setBinaryFile() File read failed %s\n", filePath)
@@ -184,23 +192,19 @@ class ServiceResponse(object):
             if os.path.exists(filePath):
                 _dir, fn = os.path.split(filePath)
                 (_rn, ext) = os.path.splitext(fn)
-                #
                 dd = {}
-                with open(filePath, "r") as fin:
+                with open(filePath) as fin:
                     dd["data"] = fin.read()
                 if ext.lower() != ".json":
                     self._cD["datafilecontent"] = callBack + "(" + json.dumps(dd) + ");"
                 else:
                     self._cD["datafilecontent"] = callBack + "(" + dd["data"] + ");"
-                #
                 self._cD["datafileName"] = fn
                 contentType = "application/x-javascript"
                 encodingType = None
-                #
                 self._cD["contentmimetype"] = contentType
                 self._cD["encodingtype"] = encodingType
                 self._cD["disposition"] = "inline"
-                #
 
                 logger.debug("Serving %s as %s\n", filePath, self._cD["datafilecontent"])
         except Exception as e:
@@ -212,18 +216,17 @@ class ServiceResponse(object):
         for k, v in self._cD.items():
             if v is None:
                 continue
-            elif isinstance(v, dict):
+            if isinstance(v, dict):
                 retL.append("  - key = %-35s - dict : %s" % (k, v.items()))
             elif v is not None and len(str(v).strip()) > 0:
                 retL.append("  - key = %-35s - value(1-%d): %s" % (k, maxLength, str(v)[:maxLength]))
         return "\n   ".join(retL)
 
-    def setReturnFormat(self, format):  # pylint: disable=redefined-builtin
+    def setReturnFormat(self, format):  # noqa: A002 pylint: disable=redefined-builtin
         if format in ["html", "text", "json", "jsonText", "jsonData", "location", "binary", "jsonp"]:
             self._cD["returnformat"] = format
             return True
-        else:
-            return False
+        return False
 
     def __injectMessage(self, tag, msg):
         try:
@@ -253,7 +256,6 @@ class ServiceResponse(object):
             myResponse.content_disposition = rspD["DISPOSITION"]
         if "CHECKSUM_MD5" in rspD:
             myResponse.headers.add("CHECKSUM_MD5", rspD["CHECKSUM_MD5"])
-        #
         return myResponse
 
     def __getD(self):
@@ -277,36 +279,24 @@ class ServiceResponse(object):
                 rD = self.__initTextResponse(self._cD["statustext"])
             else:
                 rD = self.__initTextResponse(self._cD["statustext"])
+        elif returnFormat == "html":
+            rD = self.__initHtmlResponse(self._cD["htmlcontent"])
+        elif returnFormat == "text":
+            rD = self.__initTextResponse(self._cD["textcontent"])
+        elif returnFormat == "location":
+            rD = self.__initLocationResponse(self._cD["location"])
+        elif returnFormat == "jsonText":
+            rD = self.__initJsonResponseInTextArea(self._cD["datacontent"])
+        elif returnFormat == "json" or returnFormat == "jsonData":
+            rD = self.__initJsonResponse(self._cD["datacontent"])
+        elif returnFormat == "binary":
+            rD = self.__initBinaryResponse(self._cD)
+            if self._cD["datafilechecksum"]:
+                rD["CHECKSUM_MD5"] = self._cD["datafilechecksum"]
+        elif returnFormat == "jsonp":
+            rD = self.__initJsonpResponse(self._cD)
         else:
-            #
-            if returnFormat == "html":
-                rD = self.__initHtmlResponse(self._cD["htmlcontent"])
-            #
-            elif returnFormat == "text":
-                rD = self.__initTextResponse(self._cD["textcontent"])
-            #
-            elif returnFormat == "location":
-                rD = self.__initLocationResponse(self._cD["location"])
-            #
-            elif returnFormat == "jsonText":
-                rD = self.__initJsonResponseInTextArea(self._cD["datacontent"])
-            #
-            elif returnFormat == "json":
-                rD = self.__initJsonResponse(self._cD["datacontent"])
-            #
-            elif returnFormat == "jsonData":
-                rD = self.__initJsonResponse(self._cD["datacontent"])
-            #
-            elif returnFormat == "binary":
-                rD = self.__initBinaryResponse(self._cD)
-                if self._cD["datafilechecksum"]:
-                    rD["CHECKSUM_MD5"] = self._cD["datafilechecksum"]
-            #
-            elif returnFormat == "jsonp":
-                rD = self.__initJsonpResponse(self._cD)
-            else:
-                pass
-        #
+            pass
         rD["STATUS_CODE"] = self._cD["statuscode"]
         return rD
 
@@ -366,7 +356,9 @@ class ServiceResponse(object):
         rspDict["RETURN_STRING"] = myText
         return rspDict
 
-    def __processTemplate(self, templateFilePath="./alignment_template.html", webIncludePath=".", parameterDict=None, insertContext=False):
+    def __processTemplate(
+        self, templateFilePath="./alignment_template.html", webIncludePath=".", parameterDict=None, insertContext=False
+    ):
         """Read the input HTML template data file and perform the key/value substitutions in the
         input parameter dictionary.
 
@@ -380,17 +372,19 @@ class ServiceResponse(object):
         if parameterDict is None:
             parameterDict = {}
         try:
-            ifh = open(templateFilePath, "r")
+            ifh = open(templateFilePath)
             sL = []
-            for line in ifh.readlines():
-                if str(line).strip().startswith("<!--#include") or (insertContext and str(line).strip().startswith("<!--#insert")):
+            for line in ifh.readlines():  # noqa: FURB129
+                if str(line).strip().startswith("<!--#include") or (
+                    insertContext and str(line).strip().startswith("<!--#insert")
+                ):
                     fields = str(line).split('"')
                     tpth = os.path.join(webIncludePath, fields[1][1:])
                     try:
-                        tfh = open(tpth, "r")
+                        tfh = open(tpth)
                         sL.append(tfh.read())
                         tfh.close()
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         logger.debug("failed to include %s fields=%r err=%r\n", tpth, fields, str(e))
                 else:
                     sL.append(line)

@@ -8,6 +8,7 @@
 Utilities for service session directory management.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
@@ -16,15 +17,15 @@ __version__ = "V0.07"
 
 
 import hashlib
-import time
+import logging
 import os.path
 import shutil
-import logging
+import time
 
 logger = logging.getLogger()
 
 
-class ServiceSessionFactory(object):
+class ServiceSessionFactory:
     """
     Utilities for service session directory management.
 
@@ -41,12 +42,17 @@ class ServiceSessionFactory(object):
         :param string serviceId: is the path to the directory containing the hash-id sub-directory.
 
         """
-        self.__topSessionPath = topPath if topPath else "."
-        self.__serviceUserId = serviceUserId if serviceUserId else "ANONYMOUS"
+        self.__topSessionPath = topPath or "."
+        self.__serviceUserId = serviceUserId or "ANONYMOUS"
         self.__uid = None
 
     def __str__(self):
-        return "Session top path: %s\nService user id: %s\nUnique identifier: %s\nSession path: %s\n" % (self.__topSessionPath, self.__serviceUserId, self.__uid, self.getPath())
+        return "Session top path: %s\nService user id: %s\nUnique identifier: %s\nSession path: %s\n" % (
+            self.__topSessionPath,
+            self.__serviceUserId,
+            self.__uid,
+            self.getPath(),
+        )
 
     def __repr__(self):
         return self.__str__()
@@ -59,7 +65,7 @@ class ServiceSessionFactory(object):
         return self.__uid
 
     def assignId(self):
-        self.__uid = hashlib.sha1(repr(time.time()).encode("utf-8")).hexdigest()
+        self.__uid = hashlib.sha1(repr(time.time()).encode("utf-8")).hexdigest()  # noqa: S324
         return self.__uid
 
     def __getPath(self, relative=False):
@@ -81,8 +87,7 @@ class ServiceSessionFactory(object):
             logger.debug("Session path %r", pth)
             if os.access(pth, os.F_OK):
                 return pth
-            else:
-                return None
+            return None
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING")
 

@@ -14,34 +14,30 @@
 Provide a storage interface for miscellaneous key,value data.
 
 """
+
 __docformat__ = "restructuredtext en"
 __author__ = "John Westbrook"
 __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.07"
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-import os.path
 import logging
+import os.path
+import pickle  # noqa: S403
 
 from oslo_concurrency import lockutils
 
 logger = logging.getLogger()
 
 
-class ServiceDataStore(object):
+class ServiceDataStore:
     """Provide a storage interface for miscellaneous key,value data."""
 
     def __init__(self, sessionPath, prefix=None):
         self.__filePrefix = prefix if prefix is not None else "general"
         self.__sessionPath = sessionPath
         self.__filePath = None
-        #
         lockutils.set_defaults(self.__sessionPath)
-        #
         self.__setup()
 
     def __setup(self):
@@ -55,7 +51,6 @@ class ServiceDataStore(object):
             logger.exception("FAILING for filePath %r", self.__filePath)
 
     def __serialize(self, iD):
-
         try:
             with open(self.__filePath, "wb") as fb:
                 pickle.dump(iD, fb, self.__pickleProtocol)
@@ -76,7 +71,7 @@ class ServiceDataStore(object):
             pass
         try:
             with open(self.__filePath, "rb") as fb:
-                rD = pickle.load(fb)
+                rD = pickle.load(fb)  # noqa: S301
         except Exception as e:
             logger.exception("Deserialization failure with file %s - %r", self.__filePath, str(e))
 
@@ -93,7 +88,7 @@ class ServiceDataStore(object):
     def __repr__(self):
         return self.__str__()
 
-    def dump(self, format="text"):  # pylint: disable=redefined-builtin,unused-argument
+    def dump(self, format="text"):  # noqa: A002,ARG002 pylint: disable=redefined-builtin,unused-argument
         try:
             return "\n   ".join(self.__outputList())
         except:  # noqa: E722 pylint: disable=bare-except
@@ -138,13 +133,11 @@ class ServiceDataStore(object):
             if overWrite:
                 rD[key] = value
                 return self.__serialize(rD)
-            else:
-                if key not in rD:
-                    rD[key] = value
-                    return self.__serialize(rD)
-                else:
-                    # no overwrite
-                    return False
+            if key not in rD:
+                rD[key] = value
+                return self.__serialize(rD)
+            # no overwrite
+            return False
         except Exception as e:
             logger.exception("Failure of set for key %r value %r error %r", key, value, str(e))
             return False
@@ -157,19 +150,17 @@ class ServiceDataStore(object):
             for k, v in uDict.items():
                 if k not in rD:
                     rD[k] = v
+                elif isinstance(rD[k], list) and isinstance(v, list):
+                    rD[k].extend(v)
+                elif isinstance(rD[k], list) and not isinstance(v, list):
+                    rD[k].append(v)
+                elif isinstance(rD[k], dict) and isinstance(v, dict):
+                    # only add new objects to a dict type.
+                    for tk, tv in v:
+                        if tk not in rD[k]:
+                            rD[k][tk] = tv
                 else:
-                    # append cases - for only values of the
-                    if isinstance(rD[k], list) and isinstance(v, list):
-                        rD[k].extend(v)
-                    elif isinstance(rD[k], list) and not isinstance(v, list):
-                        rD[k].append(v)
-                    elif isinstance(rD[k], dict) and isinstance(v, dict):
-                        # only add new objects to a dict type.
-                        for tk, tv in v:
-                            if tk not in rD[k]:
-                                rD[k][tk] = tv
-                    else:
-                        pass
+                    pass
 
             return self.__serialize(rD)
         except Exception as e:
