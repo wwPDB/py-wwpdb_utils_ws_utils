@@ -30,6 +30,7 @@ import os
 import platform
 import sys
 import unittest
+from typing import Optional
 
 from wwpdb.utils.ws_utils.ServiceSmtpUtils import ServiceSmtpUtils
 from wwpdb.utils.ws_utils.TokenUtils import JwtTokenReader, JwtTokenUtils
@@ -43,9 +44,11 @@ if not os.path.exists(TESTOUTPUT):  # pragma: no cover
 logging.basicConfig(level=logging.DEBUG, format="\n[%(levelname)s]-%(module)s.%(funcName)s: %(message)s")
 logging.getLogger().setLevel(logging.INFO)
 
+logger = logging.getLogger()
+
 
 class MyJwtTokenUtils(JwtTokenUtils):
-    def __init__(self, siteId=None, tokenPrefix=None):
+    def __init__(self, siteId: Optional[str] = None, tokenPrefix: Optional[str] = None) -> None:
         """
         Token utilities for registration webservice
 
@@ -62,27 +65,27 @@ class MyJwtTokenUtils(JwtTokenUtils):
 
 
 class TokenUtilsTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.__tokenPrefix = "VALWS"
 
-    def testGetToken(self):
+    def testGetToken(self) -> None:
         """Test acquiring new or existing token"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("some.email@noreply.org")
-        logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+        logger.debug("tokenid %r is %r ", tokenId, jwtToken)
         # Test to ensure proper return
         tD = tU.parseToken(jwtToken)
         tId = tD["sub"]
-        logging.debug("token %r payload %r ", tokenId, tD)
+        logger.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
         # For coverage
         self.assertIsNotNone(tU.getFilePath())
 
-    def testTokenTimes(self):
+    def testTokenTimes(self) -> None:
         """Test token access creation and expiration dates"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
-        logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+        logger.debug("tokenid %r is %r ", tokenId, jwtToken)
         tD = tU.parseToken(jwtToken)
         if sys.version_info[0] > 2:
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -96,7 +99,7 @@ class TokenUtilsTests(unittest.TestCase):
             createT = datetime.datetime.utcfromtimestamp(createS)  # noqa: DTZ004
 
         difT = now - createT
-        logging.debug("token age %f seconds", difT.seconds)
+        logger.debug("token age %f seconds", difT.seconds)
 
         expS = tD["exp"]
         if sys.version_info[0] > 2:
@@ -104,52 +107,51 @@ class TokenUtilsTests(unittest.TestCase):
         else:
             expT = datetime.datetime.utcfromtimestamp(expS)  # noqa: DTZ004
         difT = expT - now
-        logging.debug("token expires in %f days", difT.days)
+        logger.debug("token expires in %f days", difT.days)
         self.assertGreaterEqual(difT.days, 29)
 
-    def testReUseManyTokens(self):
+    def testReUseManyTokens(self) -> None:
         """Test the reuse of existing tokens based on an e-mail lookup"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in range(100):
             tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
-            logging.debug("Iteration %3d tokenid %r is %r ", i, tokenId, jwtToken)
+            logger.debug("Iteration %3d tokenid %r is %r ", i, tokenId, jwtToken)
             tD = tU.parseToken(jwtToken)
             tId = tD["sub"]
-            logging.debug("token %r payload %r ", tokenId, tD)
+            logger.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
 
-    def testGetManyTokens(self):
+    def testGetManyTokens(self) -> None:
         """Test generate many new tokens and unique e-mail addresses"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in range(100):
             tokenId, jwtToken = tU.getToken("john.westbrook%04d@rcsb.org" % i)
-            logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+            logger.debug("tokenid %r is %r ", tokenId, jwtToken)
             tD = tU.parseToken(jwtToken)
             tId = tD["sub"]
-            logging.debug("token %r payload %r ", tokenId, tD)
+            logger.debug("token %r payload %r ", tokenId, tD)
         self.assertEqual(tokenId, tId)
 
-    def testRemoveTokens(self):
+    def testRemoveTokens(self) -> None:
         """Test remove many tokens by token id"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         for i in range(100):
             tokenId, jwtToken = tU.getToken("john.westbrook%04d@rcsb.org" % i)
-            logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+            logger.debug("tokenid %r is %r ", tokenId, jwtToken)
             self.assertTrue(tU.tokenIdExists(tokenId))
             ok = tU.remove(tokenId)
         self.assertEqual(ok, True)
 
     # Disabled - we do not want email in automated test
-    def NoSendToken(self):  # pragma: no cover
+    def NoSendToken(self) -> None:  # pragma: no cover
         """Test acquire new or existing token and send token to recipient"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("john.westbrook@rcsb.org")
-        logging.debug("tokenid %r is %r ", tokenId, jwtToken)
+        logger.debug("tokenid %r is %r ", tokenId, jwtToken)
         tD = tU.parseToken(jwtToken)
         # tId = tD['sub']
-        logging.debug("token %r payload %r ", tokenId, tD)
-        msgText = (
-            """
+        logger.debug("token %r payload %r ", tokenId, tD)
+        msgTemplate = """
 This is text is presented on multiple lines.
 This is more multi-line text
 This is more multi-line text
@@ -158,10 +160,9 @@ This is more multi-line text
 %s
 -------------------------------- Remove this surrounding text  ---------------------
         """
-            % jwtToken
-        )
+        msgText = msgTemplate % jwtToken
         tokenFileName = "access-token.jwt"
-        with open(tokenFileName, "wb") as outfile:
+        with open(tokenFileName, "w") as outfile:
             outfile.write("%s" % jwtToken)
         smtpU = ServiceSmtpUtils()
         ok = smtpU.emailFiles(
@@ -176,7 +177,7 @@ This is more multi-line text
 
         self.assertEqual(ok, True)
 
-    def testParseAuth(self):
+    def testParseAuth(self) -> None:
         """Test parsing authorization"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         tokenId, jwtToken = tU.getToken("some.email@noreply.org")
@@ -205,7 +206,7 @@ This is more multi-line text
         self.assertFalse(tD["errorCode"])
         self.assertEqual(tD["sub"], tokenId)
 
-    def testTokenReaderParseToken(self):
+    def testTokenReaderParseToken(self) -> None:
         """Test parsing tokens from JwtTokenReader"""
 
         tR = JwtTokenReader()
@@ -226,7 +227,7 @@ This is more multi-line text
         self.assertTrue(tD["errorCode"])
         self.assertEqual(tD["errorMessage"], "API access token has expired")
 
-    def testTokenUtilsParseToken(self):
+    def testTokenUtilsParseToken(self) -> None:
         """Test parsing tokens from TokenUtils"""
 
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
@@ -246,7 +247,7 @@ This is more multi-line text
         self.assertTrue(tD["errorCode"])
         self.assertEqual(tD["errorMessage"], "API access token has expired")
 
-    def testTokenUtilsParseAuth(self):
+    def testTokenUtilsParseAuth(self) -> None:
         """Test parsing authorization"""
         tU = MyJwtTokenUtils(tokenPrefix=self.__tokenPrefix)
         _tokenId, jwtToken = tU.getToken("some.email@noreply.org")  # pylint: disable=unused-variable
@@ -269,7 +270,7 @@ This is more multi-line text
         self.assertEqual(rD["token"], jwtToken)
 
 
-def suiteTokenGen():  # pragma: no cover
+def suiteTokenGen() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testGetToken"))
     suite.addTest(TokenUtilsTests("testTokenTimes"))
@@ -281,13 +282,13 @@ def suiteTokenGen():  # pragma: no cover
     return suite
 
 
-def suiteTokenSend():  # pragma: no cover
+def suiteTokenSend() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testSendToken"))
     return suite
 
 
-def suiteTokenReader():  # pragma: no cover
+def suiteTokenReader() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(TokenUtilsTests("testParseAuth"))
     suite.addTest(TokenUtilsTests("testTokenReaderParseToken"))

@@ -21,13 +21,14 @@ import gzip
 import logging
 import mimetypes
 import os
+from typing import Any, Dict, List, Optional, Tuple
 
 from webob import Response
 
 try:
     import json
 except ImportError:  # pragma: no cover
-    import simplejson as json  # type: ignore[no-redef, import-untyped]
+    import simplejson as json  # type: ignore[no-redef]
 
 try:
     # Python 2
@@ -40,7 +41,7 @@ logger = logging.getLogger()
 
 
 class ServiceResponse:
-    def __init__(self, returnFormat="json", injectStatus=True):
+    def __init__(self, returnFormat: str = "json", injectStatus: bool = True) -> None:
         """
         Manage content items to be transfered as part of the application response.
 
@@ -51,9 +52,9 @@ class ServiceResponse:
         self.__injectStatus = injectStatus
         self._cD = self.__setup(returnFormat)
 
-    def __setup(self, returnFormat):
+    def __setup(self, returnFormat: str) -> Dict[str, Any]:
         """Default response content is set here."""
-        cD = {}
+        cD: Dict[str, Any] = {}
         cD["returnformat"] = returnFormat
         cD["htmllinkcontent"] = ""
         cD["htmlcontent"] = ""
@@ -77,26 +78,26 @@ class ServiceResponse:
         cD["statuscode"] = 200
         return cD
 
-    def isError(self):
-        return self._cD["errorflag"]
+    def isError(self) -> bool:
+        return bool(self._cD["errorflag"])
 
-    def setError(self, statusCode=200, msg=""):
+    def setError(self, statusCode: int = 200, msg: str = "") -> None:
         self._cD["errorflag"] = True
         self._cD["statustext"] = msg
         self._cD["statuscode"] = statusCode
 
-    def setData(self, dataObj=None):
+    def setData(self, dataObj: Any = None) -> None:
         self._cD["datacontent"] = dataObj
 
-    def getData(self):
+    def getData(self) -> Any:
         return self._cD["datacontent"]
 
-    def setHtmlList(self, htmlList=None):
+    def setHtmlList(self, htmlList: Optional[List[str]] = None) -> None:
         if htmlList is None:
             htmlList = []
         self._cD["htmlcontent"] = "\n".join(htmlList)
 
-    def appendHtmlList(self, htmlList=None):
+    def appendHtmlList(self, htmlList: Optional[List[str]] = None) -> None:
         if htmlList is None:
             htmlList = []
         if len(self._cD["htmlcontent"]) > 0:
@@ -104,10 +105,16 @@ class ServiceResponse:
         else:
             self._cD["htmlcontent"] = "\n".join(htmlList)
 
-    def setHtmlText(self, htmlText=""):
+    def setHtmlText(self, htmlText: str = "") -> None:
         self._cD["htmlcontent"] = htmlText
 
-    def setHtmlTextFromTemplate(self, templateFilePath, webIncludePath, parameterDict=None, insertContext=False):
+    def setHtmlTextFromTemplate(
+        self,
+        templateFilePath: str,
+        webIncludePath: str,
+        parameterDict: Optional[Dict[str, Any]] = None,
+        insertContext: bool = False,
+    ) -> None:
         pD = parameterDict if parameterDict is not None else {}
         self._cD["htmlcontent"] = self.__processTemplate(
             templateFilePath=templateFilePath,
@@ -116,16 +123,16 @@ class ServiceResponse:
             insertContext=insertContext,
         )
 
-    def setHtmlLinkText(self, htmlText=""):
+    def setHtmlLinkText(self, htmlText: str = "") -> None:
         self._cD["htmllinkcontent"] = htmlText
 
-    def setText(self, text=""):
+    def setText(self, text: str = "") -> None:
         self._cD["textcontent"] = text
 
-    def setLocation(self, url=""):
+    def setLocation(self, url: str = "") -> None:
         self._cD["location"] = url
 
-    def setTextFile(self, filePath):
+    def setTextFile(self, filePath: str) -> None:
         try:
             if os.path.exists(filePath):
                 with open(filePath) as fin:
@@ -133,13 +140,14 @@ class ServiceResponse:
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("+setTextFile() File read failed %s\n", filePath)
 
-    def setHtmlContentPath(self, aPath):
+    def setHtmlContentPath(self, aPath: str) -> None:
         self._cD["htmlcontentpath"] = aPath
 
-    def getMimetypeAndEncoding(self, filename):
+    def getMimetypeAndEncoding(self, filename: str) -> Tuple[str, Optional[str]]:
         ftype, encoding = mimetypes.guess_type(filename)
         # We'll ignore encoding, even though we shouldn't really
         if ftype is None:
+            ret: Tuple[str, Optional[str]]
             if filename.find(".cif.V") > 0:
                 ret = ("text/plain", None)
             else:
@@ -148,7 +156,9 @@ class ServiceResponse:
             ret = (ftype, encoding)
         return ret
 
-    def setBinaryFile(self, filePath, attachmentFlag=False, serveCompressed=True, md5Digest=None):
+    def setBinaryFile(
+        self, filePath: str, attachmentFlag: bool = False, serveCompressed: bool = True, md5Digest: Optional[str] = None
+    ) -> bool:
         try:
             if os.path.exists(filePath):
                 _dir, fn = os.path.split(filePath)
@@ -187,12 +197,14 @@ class ServiceResponse:
             logger.exception("ResponseContent.setBinaryFile() File read failed %s\n", filePath)
         return False
 
-    def wrapFileAsJsonp(self, filePath, callBack=None):
+    def wrapFileAsJsonp(self, filePath: str, callBack: Optional[str] = None) -> None:
         try:
+            if callBack is None:
+                raise ValueError("No callback provided")  # noqa: EM101,TRY003,TRY301
             if os.path.exists(filePath):
                 _dir, fn = os.path.split(filePath)
-                (_rn, ext) = os.path.splitext(fn)
-                dd = {}
+                _rn, ext = os.path.splitext(fn)
+                dd: Dict[str, str] = {}
                 with open(filePath) as fin:
                     dd["data"] = fin.read()
                 if ext.lower() != ".json":
@@ -208,10 +220,10 @@ class ServiceResponse:
 
                 logger.debug("Serving %s as %s\n", filePath, self._cD["datafilecontent"])
         except Exception as e:
-            logging.exception("File read failed %s err %r", filePath, str(e))
+            logger.exception("File read failed %s err %r", filePath, str(e))
 
-    def dump(self, maxLength=130):
-        retL = []
+    def dump(self, maxLength: int = 130) -> str:
+        retL: List[str] = []
         retL.append("Service response object:")
         for k, v in self._cD.items():
             if v is None:
@@ -222,13 +234,13 @@ class ServiceResponse:
                 retL.append("  - key = %-35s - value(1-%d): %s" % (k, maxLength, str(v)[:maxLength]))
         return "\n   ".join(retL)
 
-    def setReturnFormat(self, format):  # noqa: A002 pylint: disable=redefined-builtin
+    def setReturnFormat(self, format: str) -> bool:  # noqa: A002 pylint: disable=redefined-builtin
         if format in ["html", "text", "json", "jsonText", "jsonData", "location", "binary", "jsonp"]:
             self._cD["returnformat"] = format
             return True
         return False
 
-    def __injectMessage(self, tag, msg):
+    def __injectMessage(self, tag: str, msg: Any) -> bool:
         try:
             if tag not in self._cD["datacontent"]:
                 self._cD["datacontent"][tag] = msg
@@ -236,7 +248,7 @@ class ServiceResponse:
             pass
         return False
 
-    def getResponse(self):
+    def getResponse(self) -> Response:
         rspD = self.__getD()
         #
         #  Build the WebOb response -
@@ -258,9 +270,9 @@ class ServiceResponse:
             myResponse.headers.add("CHECKSUM_MD5", rspD["CHECKSUM_MD5"])
         return myResponse
 
-    def __getD(self):
+    def __getD(self) -> Dict[str, Any]:
         """Return an internal dictionary as precursor to preparing for web server response object"""
-        rD = {}
+        rD: Dict[str, Any] = {}
         returnFormat = self._cD["returnformat"]
 
         #
@@ -300,16 +312,16 @@ class ServiceResponse:
         rD["STATUS_CODE"] = self._cD["statuscode"]
         return rD
 
-    def __initLocationResponse(self, url):
-        rspDict = {}
+    def __initLocationResponse(self, url: str) -> Dict[str, Any]:
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = "location"
         rspDict["RETURN_STRING"] = url
         return rspDict
 
-    def __initBinaryResponse(self, myD=None):
+    def __initBinaryResponse(self, myD: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if myD is None:
             myD = {}
-        rspDict = {}
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = myD["contentmimetype"]
         rspDict["RETURN_STRING"] = myD["datafilecontent"]
         try:  # noqa: E722 pylint: disable=bare-except
@@ -320,45 +332,49 @@ class ServiceResponse:
             pass
         return rspDict
 
-    def __initJsonResponse(self, myD=None):
+    def __initJsonResponse(self, myD: Any = None) -> Dict[str, Any]:
         if myD is None:
             myD = {}
-        rspDict = {}
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = "application/json"
         rspDict["RETURN_STRING"] = json.dumps(myD)
         return rspDict
 
-    def __initJsonpResponse(self, myD=None):
+    def __initJsonpResponse(self, myD: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if myD is None:
             myD = {}
-        rspDict = {}
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = myD["contentmimetype"]
         rspDict["RETURN_STRING"] = myD["datafilecontent"]
         return rspDict
 
-    def __initJsonResponseInTextArea(self, myD=None):
+    def __initJsonResponseInTextArea(self, myD: Any = None) -> Dict[str, Any]:
         if myD is None:
             myD = {}
-        rspDict = {}
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = "text/html"
         rspDict["RETURN_STRING"] = "<textarea>" + json.dumps(myD) + "</textarea>"
         return rspDict
 
-    def __initHtmlResponse(self, myHtml=""):
-        rspDict = {}
+    def __initHtmlResponse(self, myHtml: str = "") -> Dict[str, Any]:
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = "text/html"
         rspDict["RETURN_STRING"] = myHtml
         return rspDict
 
-    def __initTextResponse(self, myText=""):
-        rspDict = {}
+    def __initTextResponse(self, myText: str = "") -> Dict[str, Any]:
+        rspDict: Dict[str, Any] = {}
         rspDict["CONTENT_TYPE"] = "text/plain"
         rspDict["RETURN_STRING"] = myText
         return rspDict
 
     def __processTemplate(
-        self, templateFilePath="./alignment_template.html", webIncludePath=".", parameterDict=None, insertContext=False
-    ):
+        self,
+        templateFilePath: str = "./alignment_template.html",
+        webIncludePath: str = ".",
+        parameterDict: Optional[Dict[str, Any]] = None,
+        insertContext: bool = False,
+    ) -> str:
         """Read the input HTML template data file and perform the key/value substitutions in the
         input parameter dictionary.
 
@@ -373,7 +389,7 @@ class ServiceResponse:
             parameterDict = {}
         try:
             ifh = open(templateFilePath)
-            sL = []
+            sL: List[str] = []
             for line in ifh.readlines():  # noqa: FURB129
                 if str(line).strip().startswith("<!--#include") or (
                     insertContext and str(line).strip().startswith("<!--#insert")

@@ -29,6 +29,7 @@ import os
 import platform
 import sys
 import unittest
+from typing import Any, Dict
 
 from wwpdb.utils.ws_utils.ServiceDataStore import ServiceDataStore
 
@@ -43,12 +44,12 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 class ServiceDataStoreTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.__sessdir = os.path.join(TESTOUTPUT, "session")
         if not os.path.exists(self.__sessdir):  # pragma: no cover
             os.makedirs(self.__sessdir)
 
-    def testInstantiate(self):
+    def testInstantiate(self) -> None:
         """Test acquiring new or existing token"""
         tfile = os.path.join(self.__sessdir, "test1-session-store.pic")
         if os.path.exists(tfile):
@@ -69,7 +70,7 @@ class ServiceDataStoreTests(unittest.TestCase):
         sys.stderr.write("SDS %s\n" % s)
 
         # Test update - ensure new values set - but not replace others
-        uDict = {"t1": 3, "t2": 2}
+        uDict: Dict[str, Any] = {"t1": 3, "t2": 2}
         self.assertTrue(sds.update(uDict), "Updating")
         self.assertEqual(sds.get("t1"), "2")  # Did not update
         self.assertEqual(sds.get("t2"), 2)
@@ -103,7 +104,7 @@ class ServiceDataStoreTests(unittest.TestCase):
         sys.stderr.write("SDS repr %s\n" % sds)
 
 
-def suiteServiceDataStore():  # pragma: no cover
+def suiteServiceDataStore() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(ServiceDataStoreTests("testInstantiate"))
     return suite

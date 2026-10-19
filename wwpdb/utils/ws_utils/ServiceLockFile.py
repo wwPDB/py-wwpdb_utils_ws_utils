@@ -16,6 +16,10 @@ import errno
 import logging
 import os
 import time
+from types import TracebackType
+from typing import Optional, Type
+
+from typing_extensions import Self
 
 logger = logging.getLogger()
 
@@ -38,7 +42,7 @@ class ServiceLockFile:
 
     """
 
-    def __init__(self, filePath, timeoutSeconds=15, retrySeconds=0.2):
+    def __init__(self, filePath: str, timeoutSeconds: float = 15, retrySeconds: float = 0.2) -> None:
         """Prepare the file locker. Specify the file to lock and optionally
         the maximum timeoutSeconds and the retrySeconds between each attempt to lock.
 
@@ -51,9 +55,9 @@ class ServiceLockFile:
         self.__timeoutSeconds = timeoutSeconds
         self.__retrySeconds = retrySeconds
         self.__debug = True
-        self.__fd = None
+        self.__fd: Optional[int] = None
 
-    def acquire(self):
+    def acquire(self) -> None:
         """Create the lock if no lock file exists.  If a lockfile exists then
         repeat the test every retrySeconds.
 
@@ -86,27 +90,32 @@ class ServiceLockFile:
                 time.sleep(self.__retrySeconds)
         self.__isLocked = True
 
-    def release(self):
+    def release(self) -> None:
         """Remove any existing lock file."""
-        if self.__isLocked:
+        if self.__isLocked and self.__fd is not None:
             os.close(self.__fd)
             os.unlink(self.__lockFilePath)
             self.__isLocked = False
             if self.__debug:
                 logger.debug("LockFile(release) removed lock file %s", self.__lockFilePath)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Internal method invoked at the beginning of a 'with' clause."""
         if not self.__isLocked:
             self.acquire()
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        exc_traceback: Optional[TracebackType],
+    ) -> None:
         """Internal method invoked at the end of a 'with' clause."""
         if self.__isLocked:
             self.release()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Internal method to cleanup any lingering lock file."""
         self.release()
 

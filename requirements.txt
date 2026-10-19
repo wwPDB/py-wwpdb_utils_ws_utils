@@ -3,8 +3,10 @@ oslo.concurrency
 wwpdb.utils.config
 webob
 python-dateutil
+typing_extensions
 # For testing - xrange
 future
 # for mypy
 types-WebOb
 types-python-dateutil
+types-simplejson
