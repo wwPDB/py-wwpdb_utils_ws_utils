@@ -29,7 +29,8 @@ dependencies = [
     "PyJWT",
     "webob",
     "wwpdb.utils.config",
-    "python-dateutil"
+    "python-dateutil",
+    "typing_extensions",
 ]
 
 [project.urls]
@@ -49,6 +50,9 @@ packages = ["wwpdb"]
 
 exclude = ["/wwpdb/mock-data"]
 #=================================== Ruff basics =============================#
+[tool.ruff]
+target-version = "py38"
+output-format = "concise"
 
 line-length = 120 # 120 is hatch's default via 'hatch init'
 include = [
@@ -64,11 +68,12 @@ include = [
 
 #
 # ------------------------- Ruff misc. options ----------------------
-preview = true
+preview = false
 explicit-preview-rules = true
 
 ignore = [
   "C402",     #  Unnecessary generator (rewrite as a `dict` comprehension)
+  "D419",     # Docstring is empty
   "EXE001",   # Shebang is present but file is not executabl
   "FBT002",   # Boolean default positional argument in function definition
   "FBT001",   # Boolean-typed positional argument in function definition
@@ -146,11 +151,13 @@ module = ["wwpdb.*", "oslo_concurrency.*"]
 ignore_missing_imports = true
 
 [tool.mypy]
+strict = true
 exclude = [
 	"test-output",
 ]
 
 # ------------------------ ruff disable until typing added
 [tool.ruff.lint.per-file-ignores]
-#"awwpdb/utils/config/ConfigInfoData.py" = ["RUF012"]  # typing.ClassVar
-#"wwpdb/utils/config/ConfigInfoData.py" = ["SLF001", "RUF012", "F401"]  # Private member access, should use typing.ClassVar, do not remove unused imports
+"tests/*.py" = ["FA100", "TRY003", "UP036", "PT027", "EM101", "S101"]
+# Python 3.8 compatible typing uses Optional, List, Dict - not PEP 604 style
+"wwpdb/**/*.py" = ["FA100"]

@@ -31,17 +31,17 @@ import logging
 import os
 import pickle  # noqa: S403
 import sys
+from typing import Any, Dict, Optional, Tuple
 
 import jwt
 from oslo_concurrency import lockutils
-
 from wwpdb.utils.config.ConfigInfo import ConfigInfo
 
 logger = logging.getLogger()
 
 
 class TokenUtilsBase:
-    def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
+    def __init__(self, siteId: Optional[str] = None, tokenPrefix: Optional[str] = None, **kwargs: Any) -> None:
         """
         Base class supporting application token management in persistent store.
         kwargs allows for overriding ConfigInfo for testing
@@ -52,24 +52,24 @@ class TokenUtilsBase:
             fn = tokenPrefix + "_TOKEN_STORE.pic"
         else:
             fn = "ANONYMOUSWS_TOKEN_STORE.pic"
-        self.__filePath = kwargs.get("site_service_registration_dir_path")
+        self.__filePath: str = kwargs.get("site_service_registration_dir_path", "")
         if not self.__filePath:
             self.__filePath = os.path.join(self._cI.get("SITE_SERVICE_REGISTRATION_DIR_PATH"), fn)
         logger.debug("Assigning token store file path %r", self.__filePath)
-        self.__lockDirPath = kwargs.get("site_service_registration_lockdir_path")
+        self.__lockDirPath: str = kwargs.get("site_service_registration_lockdir_path", "")
         if not self.__lockDirPath:
             self.__lockDirPath = self._cI.get("SITE_SERVICE_REGISTRATION_LOCKDIR_PATH", ".")
-        self.__tokenD = {}
-        self.__emailD = {}
+        self.__tokenD: Dict[str, Dict[str, Any]] = {}
+        self.__emailD: Dict[str, str] = {}
         self.__tokenPrefix = tokenPrefix or "WS"
         self.__pickleProtocol = 0
         lockutils.set_defaults(self.__lockDirPath)
         self.deserialize()
 
-    def __makeTokenId(self, iVal):
+    def __makeTokenId(self, iVal: int) -> str:
         return "%s_%010d" % (self.__tokenPrefix, iVal)
 
-    def __parseTokenId(self, tokenId):
+    def __parseTokenId(self, tokenId: str) -> Tuple[Optional[str], Optional[int]]:
         try:
             pL = tokenId.split("_")
             prefix = pL[0]
@@ -78,11 +78,11 @@ class TokenUtilsBase:
         except:  # noqa: E722 pylint: disable=bare-except
             return (None, None)
 
-    def getFilePath(self):
+    def getFilePath(self) -> str:
         return self.__filePath
 
     @lockutils.synchronized("tokenutils.serialize-lock", external=True)
-    def serialize(self):
+    def serialize(self) -> bool:
         try:
             with open(self.__filePath, "wb") as outfile:
                 pickle.dump(self.__tokenD, outfile, self.__pickleProtocol)
@@ -92,7 +92,7 @@ class TokenUtilsBase:
             logger.exception("FAILING")
         return False
 
-    def deserialize(self):
+    def deserialize(self) -> bool:
         try:
             with open(self.__filePath, "rb") as outfile:
                 self.__tokenD = pickle.load(outfile)  # noqa: S301
@@ -103,14 +103,14 @@ class TokenUtilsBase:
             logger.debug("Unable to deserialize persistent token store %r - %r", self.__filePath, str(e))
         return False
 
-    def tokenIdExists(self, tokenId):
+    def tokenIdExists(self, tokenId: str) -> bool:
         try:
             return tokenId in self.__tokenD
         except:  # noqa: E722 pylint: disable=bare-except
             pass
         return False
 
-    def tokenIdEmailExists(self, email):
+    def tokenIdEmailExists(self, email: str) -> bool:
         try:
             return email in self.__emailD
         except:  # noqa: E722 pylint: disable=bare-except
@@ -118,7 +118,7 @@ class TokenUtilsBase:
         return False
 
     @lockutils.synchronized("tokenutils.transaction-lock", external=True)
-    def remove(self, tokenId):
+    def remove(self, tokenId: str) -> bool:
         self.serialize()
         try:
             email = self.getTokenIdEmail(tokenId)
@@ -135,18 +135,18 @@ class TokenUtilsBase:
         self.serialize()
         return True
 
-    def getTokenIdEmail(self, tokenId):
+    def getTokenIdEmail(self, tokenId: str) -> str:
         try:
-            return self.__tokenD[tokenId]["email"]
+            return str(self.__tokenD[tokenId]["email"])
         except:  # noqa: E722 pylint: disable=bare-except
             return ""
 
-    def saveTokenId(self, tokenId, email, **kw):
+    def saveTokenId(self, tokenId: Optional[str], email: Optional[str], **kw: Any) -> bool:
         """"""
         if tokenId is None or len(tokenId) < 12 or email is None or len(email) < 3:
             return False
         try:
-            tD = {"email": email}
+            tD: Dict[str, Any] = {"email": email}
             tD.update(kw)
             self.__tokenD[tokenId] = tD
             self.__emailD[email] = tokenId
@@ -156,7 +156,7 @@ class TokenUtilsBase:
             logger.exception("Token save FAILING")
         return False
 
-    def fetchTokenId(self, email):
+    def fetchTokenId(self, email: str) -> str:
         """Return any existing token assigned to the input e-mail or create the next token
         identifer with this e-mail assignment.
         """
@@ -173,7 +173,7 @@ class TokenUtilsBase:
 
         return tokenId
 
-    def __nextTokenId(self):
+    def __nextTokenId(self) -> int:
         """Return the next token identifier string (e.g. N+1 for <PREFIX>_0000000N)
 
         return 1-N for success or -1 for failure
@@ -181,8 +181,10 @@ class TokenUtilsBase:
         try:
             if len(self.__tokenD.keys()) > 0:
                 tokenMax = max(self.__tokenD.keys())
-                _pr, iV = self.__parseTokenId(tokenMax)
-                iV += 1
+                _pr, tV = self.__parseTokenId(tokenMax)
+                if tV is None:
+                    raise ValueError("Unable to parse token id %r" % tokenMax)
+                iV = tV + 1
             else:
                 iV = 1
             return iV
@@ -193,7 +195,7 @@ class TokenUtilsBase:
 
 
 class JwtTokenUtils(TokenUtilsBase):
-    def __init__(self, siteId=None, tokenPrefix=None, **kwargs):
+    def __init__(self, siteId: Optional[str] = None, tokenPrefix: Optional[str] = None, **kwargs: Any) -> None:
         """
         Token utilities for registration webservice
 
@@ -203,11 +205,11 @@ class JwtTokenUtils(TokenUtilsBase):
         # self.__inputToken = self._reqObj.getValue('authorization').split()[1]
         #
         serviceKey = self._cI.get("SITE_SERVICE_REGISTRATION_KEY", None)
-        self.__serviceKey = serviceKey or "secretvalue"
+        self.__serviceKey: str = serviceKey or "secretvalue"
         self.__tokenErrorCode = 401
 
-    def parseAuth(self, authHeader):
-        rD = {"errorCode": None, "errorMessage": None, "token": None, "errorFlag": False}
+    def parseAuth(self, authHeader: str) -> Dict[str, Any]:
+        rD: Dict[str, Any] = {"errorCode": None, "errorMessage": None, "token": None, "errorFlag": False}
         parts = authHeader.split()
         if parts[0].lower() != "bearer":
             rD = {
@@ -227,11 +229,11 @@ class JwtTokenUtils(TokenUtilsBase):
             rD["token"] = parts[1]
         return rD
 
-    def parseToken(self, token):
+    def parseToken(self, token: Optional[str]) -> Dict[str, Any]:
         """Return data payload for the input token along with any error diagnostics -"""
         return self.__getTokenData(token)
 
-    def getToken(self, email, expireDays=30):
+    def getToken(self, email: str, expireDays: int = 30) -> Tuple[str, str]:
         """Return a tokenId and a jwt token for the input e-mail address.
         Existing tokenId's are reused with the existing email address.
 
@@ -240,15 +242,17 @@ class JwtTokenUtils(TokenUtilsBase):
         jwtToken = self.__create_token(tokenId, self.__serviceKey, expireDays=expireDays)
         return tokenId, jwtToken
 
-    def __getutcnow(self):
+    def __getutcnow(self) -> datetime.datetime:
         """Returns timezone aware utc now if system allows"""
-        if sys.version_info[0] > 2:
+        if sys.version_info[0] > 2:  # noqa: UP036
             dtNow = datetime.datetime.now(datetime.timezone.utc)
         else:
             dtNow = datetime.datetime.utcnow()  # noqa: DTZ003
         return dtNow
 
-    def __create_token(self, tokenId, secretKey, expireDays=30, algorithm="HS256", encoding="utf-8"):
+    def __create_token(
+        self, tokenId: str, secretKey: str, expireDays: int = 30, algorithm: str = "HS256", encoding: str = "utf-8"
+    ) -> str:
         payload = {
             #        using the standard JWT claim keys --
             # subject id
@@ -260,23 +264,26 @@ class JwtTokenUtils(TokenUtilsBase):
         }
         token = jwt.encode(payload, secretKey, algorithm=algorithm)
         #
-        # PyJwt 2.x return string
+        # PyJwt 2.x return string, 1.x returns bytes
         #
-        if int(jwt.__version__.split(".")[0]) >= 2:
-            return token
-        #
-        # 'utf-8' or 'unicode_escape'?
-        #
-        return token.decode(encoding)
+        if isinstance(token, bytes):
+            #
+            # 'utf-8' or 'unicode_escape'?
+            #
+            return token.decode(encoding)
+        return token
 
-    def __parseToken(self, token, secretKey="secretvalue", algorithm="HS256"):
-        return jwt.decode(token, secretKey, algorithms=algorithm)
+    def __parseToken(
+        self, token: Optional[str], secretKey: str = "secretvalue", algorithm: str = "HS256"
+    ) -> Dict[str, Any]:
+        # A missing token is rejected by jwt.decode() as invalid
+        return jwt.decode(token or "", secretKey, algorithms=[algorithm])
 
-    def __getTokenData(self, token):
+    def __getTokenData(self, token: Optional[str]) -> Dict[str, Any]:
         """Return token payload as a dictionary and processing diagnostics -"""
         errorCode = None
         errorMessage = None
-        tokenData = {}
+        tokenData: Dict[str, Any] = {}
         if token is None:
             errorMessage = "Missing token"
         try:
@@ -299,18 +306,18 @@ class JwtTokenUtils(TokenUtilsBase):
 
 
 class JwtTokenReader:
-    def __init__(self, siteId=None):
+    def __init__(self, siteId: Optional[str] = None) -> None:
         """
         Limited set of token methods required to read and validate a JWT tokens.
 
         """
         self._cI = ConfigInfo(siteId)
         serviceKey = self._cI.get("SITE_SERVICE_REGISTRATION_KEY", default=None)
-        self.__serviceKey = serviceKey or "secretvalue"
+        self.__serviceKey: str = serviceKey or "secretvalue"
         self.__tokenErrorCode = 401
 
-    def parseAuth(self, authHeader):
-        rD = {"errorCode": None, "errorMessage": None, "token": None, "errorFlag": False}
+    def parseAuth(self, authHeader: str) -> Dict[str, Any]:
+        rD: Dict[str, Any] = {"errorCode": None, "errorMessage": None, "token": None, "errorFlag": False}
         parts = authHeader.split()
         if parts[0].lower() != "bearer":
             rD = {
@@ -330,18 +337,21 @@ class JwtTokenReader:
             rD["token"] = parts[1]
         return rD
 
-    def parseToken(self, token):
+    def parseToken(self, token: Optional[str]) -> Dict[str, Any]:
         """Return data payload for the input token along with any error diagnostics -"""
         return self.__getTokenData(token)
 
-    def __parseToken(self, token, secretKey="secretvalue", algorithm="HS256"):
-        return jwt.decode(token, secretKey, algorithms=algorithm)
+    def __parseToken(
+        self, token: Optional[str], secretKey: str = "secretvalue", algorithm: str = "HS256"
+    ) -> Dict[str, Any]:
+        # A missing token is rejected by jwt.decode() as invalid
+        return jwt.decode(token or "", secretKey, algorithms=[algorithm])
 
-    def __getTokenData(self, token):
+    def __getTokenData(self, token: Optional[str]) -> Dict[str, Any]:
         """Return token payload as a dictionary and processing diagnostics -"""
         errorCode = None
         errorMessage = None
-        tokenData = {}
+        tokenData: Dict[str, Any] = {}
         if token is None:
             errorMessage = "Missing token"
         try:

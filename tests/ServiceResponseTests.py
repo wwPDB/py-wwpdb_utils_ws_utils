@@ -43,23 +43,23 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 class ServiceResponseTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.__sr = ServiceResponse()
 
-    def testSetError(self):
+    def testSetError(self) -> None:
         """Test setting error"""
         self.assertFalse(self.__sr.isError())
         self.__sr.setError(statusCode=200, msg="Some error")
         self.assertTrue(self.__sr.isError())
 
-    def testSetData(self):
+    def testSetData(self) -> None:
         """Test setting data"""
         self.assertEqual(self.__sr.getData(), {})
         dt = {"1": 2}
         self.__sr.setData(dt)
         self.assertEqual(self.__sr.getData(), dt)
 
-    def testHtml(self):
+    def testHtml(self) -> None:
         """Test html list actions"""
         self.__sr.setHtmlList()
         self.__sr.setHtmlList(["Test file is foo.py", "Of two items"])
@@ -73,7 +73,7 @@ class ServiceResponseTests(unittest.TestCase):
         self.__sr.setHtmlTextFromTemplate(os.path.join(HERE, "template.txt"), HERE, parameterDict={"T1": 2})
         sys.stderr.write("%s\n" % self.__sr.dump())
 
-    def testSet(self):
+    def testSet(self) -> None:
         """Random tests of setting values"""
         # Link content
         self.__sr.setHtmlLinkText("htmltext")
@@ -110,7 +110,7 @@ class ServiceResponseTests(unittest.TestCase):
         resp = self.__sr.getResponse()  # noqa: F841 pylint: disable=unused-variable
 
 
-def suiteServiceResponse():  # pragma: no cover
+def suiteServiceResponse() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(ServiceResponseTests("testSetError"))
     suite.addTest(ServiceResponseTests("testSetData"))

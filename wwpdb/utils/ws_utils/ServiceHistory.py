@@ -24,6 +24,7 @@ import pickle  # noqa: S403
 import sys
 import time
 from operator import itemgetter
+from typing import Any, Dict, List, Optional, Tuple
 
 import dateutil.parser
 
@@ -35,18 +36,18 @@ logger = logging.getLogger()
 class ServiceHistory:
     """Methods to manage service session history tracking"""
 
-    def __init__(self, historyPath, useUTC=False):
+    def __init__(self, historyPath: str, useUTC: bool = False) -> None:
         """"""
         self.__useUtc = useUTC
         self.__historyPath = historyPath
-        self.__filePath = None
+        self.__filePath = ""
         self.__timeOutSeconds = 2.0
         self.__retrySeconds = 0.1
         self.__unlocked_maxretry = 5  # Unlocked status history retrieval return for pickle erro
         self.__unlocked_retrySeconds = 3  # Unlocked status history return sleep
         self.__setup()
 
-    def __setup(self):
+    def __setup(self) -> None:
         #
         # self.__pickleProtocol = pickle.HIGHEST_PROTOCOL
         self.__pickleProtocol = 0
@@ -56,7 +57,7 @@ class ServiceHistory:
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING for filePath %r", self.__filePath)
 
-    def __serialize(self, iD, mode="wb"):
+    def __serialize(self, iD: Dict[str, Any], mode: str = "wb") -> bool:
         """Internal method to write session history data to persistent store."""
         with ServiceLockFile(
             self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds
@@ -69,22 +70,22 @@ class ServiceHistory:
                 logger.exception("Serialization failure with file %s", self.__filePath)
         return False
 
-    def __deserialize(self):
+    def __deserialize(self) -> Dict[str, Dict[str, Any]]:
         """Internal method to recover session history data from persistent store. Locks file"""
-        rD = {}
+        rD: Dict[str, Dict[str, Any]] = {}
         with ServiceLockFile(
             self.__filePath, timeoutSeconds=self.__timeOutSeconds, retrySeconds=self.__retrySeconds
         ) as lock:  # noqa: F841 pylint: disable=unused-variable
             return self.__deserialize_data()
         return rD
 
-    def __deserialize_data(self, raiseExc=False):
+    def __deserialize_data(self, raiseExc: bool = False) -> Dict[str, Dict[str, Any]]:
         """Derserialize the history data in the file. Might be locked or not.
         If raiseExc set raise exception on parsing pickle error"""
-        rD = {}
+        rD: Dict[str, Dict[str, Any]] = {}
         try:
             if not os.access(self.__filePath, os.R_OK):
-                logging.warning("No data store in path %r ", self.__filePath)
+                logger.warning("No data store in path %r ", self.__filePath)
                 return rD
         except:  # noqa: E722 pylint: disable=bare-except
             pass
@@ -108,7 +109,7 @@ class ServiceHistory:
 
         return rD
 
-    def add(self, sessionId, statusOp, **params):
+    def add(self, sessionId: Optional[str], statusOp: str, **params: Any) -> bool:
         """Record a service session tracking record  -
 
          :param sessionId:  target session identifier
@@ -118,11 +119,11 @@ class ServiceHistory:
         :rtype bool: True for success or False otherwise
 
         """
-        dd = {}
+        dd: Dict[str, Any] = {}
         if params:
             dd = copy.deepcopy(params)
         if self.__useUtc:
-            if sys.version_info[0] > 2:
+            if sys.version_info[0] > 2:  # noqa: UP036
                 dtNow = datetime.datetime.now(datetime.timezone.utc)
             else:
                 dtNow = datetime.datetime.utcnow()  # noqa: DTZ003
@@ -132,7 +133,7 @@ class ServiceHistory:
         tD = {"sid": sessionId, "op": statusOp, "data": dd}
         return self.__serialize(tD, mode="a+b")
 
-    def getHistory(self, lock=True):
+    def getHistory(self, lock: bool = True) -> Dict[str, Dict[str, Any]]:
         """Return a dictionary image of all session tracking data for the current service user.
         If lock is True, use lockging"""
         if lock:
@@ -145,29 +146,30 @@ class ServiceHistory:
                 return rd
             except pickle.UnpicklingError:
                 cnt += 1
-                logging.error("Could not unpickle unlocked, retry %s", cnt)
+                logger.error("Could not unpickle unlocked, retry %s", cnt)
                 time.sleep(self.__unlocked_retrySeconds)
-        logging.error("Could not parse file.  return empty")
-        rD = {}
+        logger.error("Could not parse file.  return empty")
+        rD: Dict[str, Dict[str, Any]] = {}
         return rD
 
-    def getActivitySummary(self):
+    def getActivitySummary(self) -> Dict[str, Any]:
         """Create a summary of session activity for the service user.
 
         :rtype dictionary:   dictionary of summary details -
         """
         tD = self.__deserialize()
-        rD = {}
+        rD: Dict[str, Any] = {}
         sessionCount = 0
         submittedCount = 0
         completedCount = 0
         failedCount = 0
-        sL = []
+        sL: List[Tuple[str, str, str, float]] = []
+        ssL: List[Tuple[str, str, str, float]] = []
         try:
             tStart = datetime.datetime(1969, 1, 1).isoformat()  # should always have a "created" in loop  # noqa: DTZ001
             for sId in tD:
                 sD = tD[sId]
-                deltaSeconds = 0
+                deltaSeconds: float = 0
                 if "created" in sD:
                     sessionCount += 1
                     tStart = sD["created"]["tiso"]
@@ -203,11 +205,11 @@ class ServiceHistory:
         rD["session_list"] = ssL
         return rD
 
-    def __deltatime(self, d1, d2):
+    def __deltatime(self, d1: datetime.datetime, d2: datetime.datetime) -> datetime.timedelta:
         """Handles delta time for mix of tz aware and naive types
         Returns d1-d2"""
 
-        if sys.version_info[0] < 3:
+        if sys.version_info[0] < 3:  # noqa: UP036
             return d1 - d2
 
         if (d1.tzinfo is None and d2.tzinfo is None) or (d1.tzinfo is not None and d2.tzinfo is not None):

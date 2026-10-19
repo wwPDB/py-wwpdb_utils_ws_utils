@@ -33,17 +33,23 @@ __version__ = "V0.07"
 # import ntpath
 import logging
 import time
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from wwpdb.utils.config.ConfigInfo import ConfigInfo
+
 from wwpdb.utils.ws_utils.ServiceDataStore import ServiceDataStore
 from wwpdb.utils.ws_utils.ServiceHistory import ServiceHistory
+from wwpdb.utils.ws_utils.ServiceRequest import ServiceRequest
+
+if TYPE_CHECKING:
+    from wwpdb.utils.ws_utils.ServiceSessionFactory import ServiceSessionFactory
 from wwpdb.utils.ws_utils.ServiceSessionState import ServiceSessionState
 
 logger = logging.getLogger()
 
 
 class ServiceWorkerBase:
-    def __init__(self, reqObj=None, sessionDataPrefix=None):
+    def __init__(self, reqObj: ServiceRequest, sessionDataPrefix: Optional[str] = None) -> None:
         """
         Base class supporting web application worker methods.
 
@@ -51,22 +57,22 @@ class ServiceWorkerBase:
 
         """
         self._reqObj = reqObj
-        self._sObj = None
-        self._sessionId = None
-        self._sessionPath = None
-        self._rltvSessionPath = None
+        self._sObj: Optional[ServiceSessionFactory] = None
+        self._sessionId: Optional[str] = None
+        self._sessionPath: Optional[str] = None
+        self._rltvSessionPath: Optional[str] = None
         self._siteId = self._reqObj.getSiteId()
         self._cI = ConfigInfo(self._siteId)
         #
         #  ServiceDataStore prefix for general session data -- used by _getSession()
         self._sdsPrefix = sessionDataPrefix or "general"
-        self._sds = None
+        self._sds: Optional[ServiceDataStore] = None
         #
         # Service items include:
         # self.__class__.__name__,sys._getframe().f_code.co_name
-        self.__appPathD = {}
+        self.__appPathD: Dict[str, str] = {}
 
-    def _trackServiceStatus(self, op, **params):
+    def _trackServiceStatus(self, op: str, **params: Any) -> bool:
         """Add a service history status tracking record.
 
         :param string  op:  operation status  (e.g., 'created', 'submitted', 'completed', 'failed' , ...)
@@ -78,19 +84,19 @@ class ServiceWorkerBase:
         sH = ServiceHistory(historyPath=self._reqObj.getSessionUserPath())
         return sH.add(sessionId=self._sessionId, statusOp=op, **params)
 
-    def _getServiceActivitySummary(self):
+    def _getServiceActivitySummary(self) -> Dict[str, Any]:
         """Get the service activity summary."""
         sH = ServiceHistory(historyPath=self._reqObj.getSessionUserPath())
         return sH.getActivitySummary()
 
-    def addService(self, url, opName):
+    def addService(self, url: str, opName: str) -> None:
         self.__appPathD[url] = opName
 
-    def addServices(self, serviceDict):
+    def addServices(self, serviceDict: Dict[str, str]) -> None:
         for k, v in serviceDict.items():
             self.__appPathD[k] = v
 
-    def _run(self, reqPath=None):
+    def _run(self, reqPath: Optional[str] = None) -> ServiceSessionState:
         """Map operation to path and invoke operation.  Exceptions are caught within this method.
 
         :returns:
@@ -98,7 +104,8 @@ class ServiceWorkerBase:
         Operation output is packaged in a ServiceSessionState() object.
 
         """
-        requestPath = None
+        requestPath: Optional[str] = None
+        sst: ServiceSessionState
         try:
             requestPath = reqPath or self._reqObj.getRequestPath()
             if requestPath not in self.__appPathD:
@@ -106,17 +113,18 @@ class ServiceWorkerBase:
                 sst = ServiceSessionState()
                 sst.setServiceError(msg="Unknown operation")
             else:
-                mth = getattr(self, self.__appPathD[requestPath], None)
+                # Raises AttributeError (handled below) if the operation method is not defined
+                mth = getattr(self, self.__appPathD[requestPath])
                 sst = mth()
             return sst
         except:  # noqa: E722 pylint: disable=bare-except
-            logging.exception("FAILING for requestPath %r ", requestPath)
+            logger.exception("FAILING for requestPath %r ", requestPath)
             sst = ServiceSessionState()
             sst.setServiceError(msg="Operation failure")
 
         return sst
 
-    def _appendSessionStore(self, iD=None):
+    def _appendSessionStore(self, iD: Optional[Dict[str, Any]] = None) -> bool:
         """Dictionary of key value pairs will be appended to the session parameter store.
 
         list and dict type values are extended/appended to existing values of corresponding types.
@@ -125,56 +133,64 @@ class ServiceWorkerBase:
         """
         try:
             if iD is not None and isinstance(iD, dict) and len(iD) > 0:
-                self._sds.update(iD)
+                self.__getSds().update(iD)
             return True
         except:  # noqa: E722 pylint: disable=bare-except
-            logging.exception("FAILED updating with input %r ", iD)
+            logger.exception("FAILED updating with input %r ", iD)
         return False
 
-    def _getSessionStoreDict(self):
+    def _getSessionStoreDict(self) -> Dict[str, Any]:
         """Recover session store data as a dictionary."""
         try:
-            return self._sds.getDictionary()
+            return self.__getSds().getDictionary()
         except:  # noqa: E722 pylint: disable=bare-except
-            logging.exception("FAILED to recover session store")
+            logger.exception("FAILED to recover session store")
 
         return {}
 
-    def _setSessionStoreValue(self, ky, val):
+    def _setSessionStoreValue(self, ky: str, val: Any) -> Union[bool, Dict[str, Any]]:
         """Set session store data as a dictionary."""
         try:
-            return self._sds.set(ky, val)
+            return self.__getSds().set(ky, val)
         except:  # noqa: E722 pylint: disable=bare-except
-            logging.exception("FAILED to set session store value")
+            logger.exception("FAILED to set session store value")
 
         return {}
 
-    def _trackSessionHistory(self, msg="ok"):
+    def _trackSessionHistory(self, msg: str = "ok") -> None:
         rP = self._reqObj.getRequestPath()
         tS = time.strftime("%Y %m %d %H:%M:%S", time.localtime())
-        self._sds.append("session_history", (rP, tS, msg))
+        self.__getSds().append("session_history", (rP, tS, msg))
 
-    def _getSession(self, new=False, useContext=False, contextOverWrite=True, trackHistory=True):
+    def __getSds(self) -> ServiceDataStore:
+        if self._sds is None:
+            emsg = "Session data store is not initialized"
+            raise ValueError(emsg)
+        return self._sds
+
+    def _getSession(
+        self, new: bool = False, useContext: bool = False, contextOverWrite: bool = True, trackHistory: bool = True
+    ) -> bool:
         """Join existing session or create new session as required."""
         try:
             self._sObj = self._reqObj.getSessionObj(new=new)
             self._sessionId = self._sObj.getId()
             self._sessionPath = self._sObj.getPath()
-            logging.debug("session   id  %s", self._sessionId)
-            logging.debug("session path  %s", self._sessionPath)
+            logger.debug("session   id  %s", self._sessionId)
+            logger.debug("session path  %s", self._sessionPath)
             if self._sessionPath is None:
                 return False
             self._rltvSessionPath = self._sObj.getRelativePath()
             self._sds = ServiceDataStore(sessionPath=self._sessionPath, prefix=self._sdsPrefix)
             if useContext and not new:
                 dd = self._getSessionStoreDict()
-                logging.debug("Imported %r", dd)
+                logger.debug("Imported %r", dd)
                 self._reqObj.setDictionary(dd, overWrite=contextOverWrite)
             if trackHistory:
                 self._trackSessionHistory(msg="begins")
             return True
         except:  # noqa: E722 pylint: disable=bare-except
-            logging.exception("FAILING create or joining session")
+            logger.exception("FAILING create or joining session")
         return False
 
     ##

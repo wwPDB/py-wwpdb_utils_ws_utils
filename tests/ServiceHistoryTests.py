@@ -42,12 +42,12 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 class ServiceHistoryTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.__histpath = os.path.join(TESTOUTPUT, "sessionhistory")
         if not os.path.exists(self.__histpath):
             os.makedirs(self.__histpath)  # pragma: no cover
 
-    def testHistory(self):
+    def testHistory(self) -> None:
         """Test acquiring new or existing token"""
         tfile = os.path.join(self.__histpath, "history-session-store.pic")
         if os.path.exists(tfile):
@@ -90,7 +90,7 @@ class ServiceHistoryTests(unittest.TestCase):
         print(summ)  # noqa: T201
 
 
-def suiteServiceHistory():  # pragma: no cover
+def suiteServiceHistory() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(ServiceHistoryTests("testHistory"))
     return suite

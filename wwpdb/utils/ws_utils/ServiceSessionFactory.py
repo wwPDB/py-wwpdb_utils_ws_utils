@@ -21,6 +21,7 @@ import logging
 import os.path
 import shutil
 import time
+from typing import Optional
 
 logger = logging.getLogger()
 
@@ -31,7 +32,7 @@ class ServiceSessionFactory:
 
     """
 
-    def __init__(self, topPath=None, serviceUserId=None):
+    def __init__(self, topPath: Optional[str] = None, serviceUserId: Optional[str] = None) -> None:
         """
         Organization of the service session directory is --
 
@@ -44,9 +45,9 @@ class ServiceSessionFactory:
         """
         self.__topSessionPath = topPath or "."
         self.__serviceUserId = serviceUserId or "ANONYMOUS"
-        self.__uid = None
+        self.__uid: Optional[str] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Session top path: %s\nService user id: %s\nUnique identifier: %s\nSession path: %s\n" % (
             self.__topSessionPath,
             self.__serviceUserId,
@@ -54,22 +55,25 @@ class ServiceSessionFactory:
             self.getPath(),
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def setId(self, uid):
+    def setId(self, uid: Optional[str]) -> bool:
         self.__uid = uid
         return True
 
-    def getId(self):
+    def getId(self) -> Optional[str]:
         return self.__uid
 
-    def assignId(self):
-        self.__uid = hashlib.sha1(repr(time.time()).encode("utf-8")).hexdigest()  # noqa: S324
-        return self.__uid
+    def assignId(self) -> str:
+        uid = hashlib.sha1(repr(time.time()).encode("utf-8")).hexdigest()  # noqa: S324
+        self.__uid = uid
+        return uid
 
-    def __getPath(self, relative=False):
-        pth = None
+    def __getPath(self, relative: bool = False) -> Optional[str]:
+        pth: Optional[str] = None
+        if self.__uid is None:
+            return pth
         try:
             if relative:
                 pth = os.path.join("/sessions", self.__serviceUserId, self.__uid)
@@ -81,11 +85,11 @@ class ServiceSessionFactory:
 
         return pth
 
-    def getPath(self):
+    def getPath(self) -> Optional[str]:
         try:
             pth = self.__getPath()
             logger.debug("Session path %r", pth)
-            if os.access(pth, os.F_OK):
+            if pth is not None and os.access(pth, os.F_OK):
                 return pth
             return None
         except:  # noqa: E722 pylint: disable=bare-except
@@ -93,45 +97,49 @@ class ServiceSessionFactory:
 
         return None
 
-    def getRelativePath(self):
+    def getRelativePath(self) -> Optional[str]:
         return self.__getPath(relative=True)
 
-    def getTopPath(self):
+    def getTopPath(self) -> str:
         return self.__topSessionPath
 
-    def getSessionUserPath(self):
+    def getSessionUserPath(self) -> str:
         return os.path.join(self.__topSessionPath, "sessions", self.__serviceUserId)
 
-    def setTopPath(self, topSessionPath):
+    def setTopPath(self, topSessionPath: str) -> bool:
         self.__topSessionPath = topSessionPath
         return True
 
-    def getTopSessionPath(self):
+    def getTopSessionPath(self) -> str:
         return self.__topSessionPath
 
-    def setTopSessionPath(self, topSessionPath):
+    def setTopSessionPath(self, topSessionPath: str) -> bool:
         self.__topSessionPath = topSessionPath
         return True
 
-    def setServiceUserId(self, serviceUserId):
+    def setServiceUserId(self, serviceUserId: str) -> bool:
         self.__serviceUserId = serviceUserId
         return True
 
-    def makeSessionPath(self):
+    def makeSessionPath(self) -> Optional[str]:
         """If the path to the current session directory does not exist
         create it and return the session path.
         """
         try:
             pth = self.__getPath()
+            if pth is None:
+                return None
             if not os.access(pth, os.F_OK):
                 os.makedirs(pth)
             return pth
         except:  # noqa: E722 pylint: disable=bare-except
             return None
 
-    def remakeSessionPath(self):
+    def remakeSessionPath(self) -> Optional[str]:
         try:
             pth = self.__getPath()
+            if pth is None:
+                return None
             if os.access(pth, os.F_OK):
                 shutil.rmtree(pth, True)
             os.makedirs(pth)

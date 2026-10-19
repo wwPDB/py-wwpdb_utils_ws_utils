@@ -33,24 +33,31 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from typing import List, Optional
 
 logger = logging.getLogger()
 
 
 class ServiceSmtpUtils:
-    def __init__(self):
+    def __init__(self) -> None:
         """Collection of mail handling methods -"""
 
-    def sendFile(self, srcPath, toAddr, fromAddr, subject, replyAddr="noreply@mail.wwpdb.org"):
+    def sendFile(
+        self,
+        srcPath: str,
+        toAddr: str,
+        fromAddr: str,
+        subject: str,
+        replyAddr: Optional[str] = "noreply@mail.wwpdb.org",
+    ) -> None:
         """Internal method to mail file as text.
 
         Reply-To: noreply@example.com
         """
 
         # Create a text/plain message
-        fp = open(srcPath, "rb")
-        msg = MIMEText(fp.read())
-        fp.close()
+        with open(srcPath) as fp:
+            msg = MIMEText(fp.read())
         msg["Subject"] = subject
         msg["From"] = fromAddr
         msg["To"] = toAddr
@@ -64,15 +71,15 @@ class ServiceSmtpUtils:
 
     def emailFiles(
         self,
-        fromAddr,
-        toAddr,
-        subject,
-        text,
-        replyAddr=None,
-        fileList=None,
-        textAsAttachment=None,
-        textAttachmentName="token.txt",
-    ):
+        fromAddr: str,
+        toAddr: str,
+        subject: str,
+        text: str,
+        replyAddr: Optional[str] = None,
+        fileList: Optional[List[str]] = None,
+        textAsAttachment: Optional[str] = None,
+        textAttachmentName: str = "token.txt",
+    ) -> bool:
         """'noreply@mail.wwpdb.org'"""
 
         msg = MIMEMultipart()
@@ -109,8 +116,15 @@ class ServiceSmtpUtils:
         return False
 
     def emailTextWithAttachment(
-        self, fromAddr, toAddr, replyAddr, subject, text, textAsAttachment=None, textFileName=None
-    ):
+        self,
+        fromAddr: str,
+        toAddr: str,
+        replyAddr: str,
+        subject: str,
+        text: str,
+        textAsAttachment: Optional[str] = None,
+        textFileName: Optional[str] = None,
+    ) -> bool:
         """"""
 
         msg = MIMEMultipart()
@@ -125,7 +139,9 @@ class ServiceSmtpUtils:
             part = MIMEBase("application", "octet-stream")
             part.set_payload(textAsAttachment)
             encoders.encode_base64(part)
-            part.add_header("Content-Disposition", 'attachment; filename="%s"' % os.path.basename(textFileName))
+            part.add_header(
+                "Content-Disposition", 'attachment; filename="%s"' % os.path.basename(textFileName or "token.txt")
+            )
             msg.attach(part)
         try:
             s = smtplib.SMTP()

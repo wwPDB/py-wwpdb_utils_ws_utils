@@ -12,11 +12,28 @@ Utility functions supporting web service classes.
 
 import hashlib
 import logging
+from typing import Literal, Union, overload
 
 logger = logging.getLogger(__name__)
 
 
-def getMD5(path, block_size=4096, hr=True):
+@overload
+def getMD5(path: str, block_size: int = ..., hr: Literal[True] = ...) -> str: ...  # noqa: E704
+
+
+@overload
+def getMD5(path: str, block_size: int, hr: Literal[False]) -> bytes: ...  # noqa: E704
+
+
+@overload
+def getMD5(path: str, *, hr: Literal[False]) -> bytes: ...  # noqa: E704
+
+
+@overload
+def getMD5(path: str, block_size: int = ..., hr: bool = ...) -> Union[str, bytes]: ...  # noqa: E704
+
+
+def getMD5(path: str, block_size: int = 4096, hr: bool = True) -> Union[str, bytes]:
     """
     Chunked MD5 function -
 

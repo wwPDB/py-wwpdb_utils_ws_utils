@@ -20,12 +20,16 @@ __email__ = "jwest@rcsb.rutgers.edu"
 __license__ = "Creative Commons Attribution 3.0 Unported"
 __version__ = "V0.09"
 
+import gzip
 import logging
 import ntpath
 import os
 import shutil
 import sys
 import types
+from typing import Optional, Tuple
+
+from wwpdb.utils.ws_utils.ServiceRequest import ServiceRequest
 
 logger = logging.getLogger()
 
@@ -36,27 +40,27 @@ class ServiceUploadUtils:
 
     """
 
-    def __init__(self, reqObj=None):
+    def __init__(self, reqObj: ServiceRequest) -> None:
         self.__reqObj = reqObj
         self.__sessionObj = self.__reqObj.getSessionObj()
         self.__sessionPath = self.__sessionObj.getPath()
         logger.debug(" - session id   %s\n", self.__sessionObj.getId())
         logger.debug(" - session path %s\n", self.__sessionPath)
 
-    def isFileUpload(self, fileTag="file"):
+    def isFileUpload(self, fileTag: str = "file") -> bool:
         """Generic check for the existence of request paramenter "fileTag="."""
         # Gracefully exit if no file is provide in the request object -
         fs = self.__reqObj.getRawValue(fileTag)
 
         logger.debug("+WebUploadUtils.isFileUpLoad() fs  %r", fs)
-        if sys.version_info[0] < 3:
+        if sys.version_info[0] < 3:  # noqa: UP036
             if isinstance(fs, (types.StringType, types.UnicodeType)):  # noqa: E722 pylint: disable=no-member
                 return False
         elif isinstance(fs, (bytes, str)):
             return False
         return True
 
-    def getUploadFileName(self, fileTag="file"):
+    def getUploadFileName(self, fileTag: str = "file") -> Optional[str]:
         """Get the user supplied name of for the uploaded file -"""
 
         logger.debug("operation started")
@@ -79,7 +83,9 @@ class ServiceUploadUtils:
 
         return None
 
-    def copyToSession(self, fileTag="file", sessionFileName=None, uncompress=True):
+    def copyToSession(
+        self, fileTag: str = "file", sessionFileName: Optional[str] = None, uncompress: bool = True
+    ) -> Optional[str]:
         """Copy uploaded file identified form element name 'fileTag' to the current session directory.
 
         File is copied to user uploaded file or to the sessionFileName if this is provided.
@@ -105,7 +111,7 @@ class ServiceUploadUtils:
             else:
                 sessionInputFileName = uploadInputFileName
 
-            sessionInputFilePath = os.path.join(self.__sessionPath, sessionInputFileName)
+            sessionInputFilePath = os.path.join(self.__getSessionPath(), sessionInputFileName)
 
             logger.debug("- user request file name     %s", fs.filename)
             logger.debug("- upload input file name     %s", uploadInputFileName)
@@ -115,7 +121,8 @@ class ServiceUploadUtils:
                 outfile.write(fs.file.read())
             if uncompress and sessionInputFilePath.endswith(".gz"):
                 logger.debug("-uncompressing file %s", str(sessionInputFilePath))
-                self.__copyGzip(sessionInputFilePath, sessionInputFilePath[:-3])
+                if not self.__copyGzip(sessionInputFilePath, sessionInputFilePath[:-3]):
+                    return None
                 sessionInputFileName = sessionInputFileName[:-3]
 
             logger.debug("Uploaded file %s", str(sessionInputFileName))
@@ -124,17 +131,17 @@ class ServiceUploadUtils:
             logger.exception("File upload processing failed")
         return None
 
-    def renameSessionFile(self, srcFileName, dstFileName):
+    def renameSessionFile(self, srcFileName: str, dstFileName: str) -> bool:
         try:
             if srcFileName != dstFileName:
-                srcPath = os.path.join(self.__sessionPath, srcFileName)
-                dstPath = os.path.join(self.__sessionPath, dstFileName)
+                srcPath = os.path.join(self.__getSessionPath(), srcFileName)
+                dstPath = os.path.join(self.__getSessionPath(), dstFileName)
                 shutil.copyfile(srcPath, dstPath)
             return True
         except:  # noqa: E722 pylint: disable=bare-except
             return False
 
-    def getFileExtension(self, fileName, ignoreVersion=False):
+    def getFileExtension(self, fileName: Optional[str], ignoreVersion: bool = False) -> Optional[str]:
         """Return the file extension (basename.ext).
 
         If the input file contains no '.' then None is returned.
@@ -164,7 +171,7 @@ class ServiceUploadUtils:
 
         return fExt
 
-    def perceiveIdentifier(self, fileName):
+    def perceiveIdentifier(self, fileName: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
         """Return the file identifier and identifier source if these can be deduced from
         the input file name.   Returned values are in uppercase.
         """
@@ -173,7 +180,7 @@ class ServiceUploadUtils:
         if fileName is None or len(fileName) < 1:
             return fId, fType
 
-        (head, _tail) = os.path.splitext(str(fileName))
+        head, _tail = os.path.splitext(str(fileName))
         headLC = head.upper()
         if headLC.startswith("RCSB"):
             fId = head
@@ -200,12 +207,25 @@ class ServiceUploadUtils:
 
         return fId, fType
 
-    def __copyGzip(self, inpFilePath, outFilePath):
-        """"""
+    def __getSessionPath(self) -> str:
+        if self.__sessionPath is None:
+            emsg = "No session path available"
+            raise ValueError(emsg)
+        return self.__sessionPath
+
+    def __copyGzip(self, inpFilePath: str, outFilePath: str) -> bool:
+        """Uncompress inpFilePath to outFilePath.
+
+        Done in-process - file names may originate from the client and must never reach a shell.
+        Any partial output is removed on failure.
+        """
         try:
-            cmd = " gzip -cd  %s > %s " % (inpFilePath, outFilePath)
-            os.system(cmd)  # noqa: S605
+            with gzip.open(inpFilePath, "rb") as ifh, open(outFilePath, "wb") as ofh:
+                shutil.copyfileobj(ifh, ofh)
             return True
-        except:  # noqa: E722 pylint: disable=bare-except
-            logger.exception("uncompress failing")
+        except (OSError, EOFError):
+            # gzip.BadGzipFile is an OSError; EOFError signals a truncated file
+            logger.exception("uncompress failing for %s", inpFilePath)
+        if os.path.exists(outFilePath):
+            os.unlink(outFilePath)
         return False

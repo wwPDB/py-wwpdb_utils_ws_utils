@@ -24,6 +24,7 @@ __version__ = "V0.07"
 import logging
 import os.path
 import pickle  # noqa: S403
+from typing import Any, Dict, List, Optional
 
 from oslo_concurrency import lockutils
 
@@ -33,14 +34,14 @@ logger = logging.getLogger()
 class ServiceDataStore:
     """Provide a storage interface for miscellaneous key,value data."""
 
-    def __init__(self, sessionPath, prefix=None):
+    def __init__(self, sessionPath: str, prefix: Optional[str] = None) -> None:
         self.__filePrefix = prefix if prefix is not None else "general"
         self.__sessionPath = sessionPath
-        self.__filePath = None
+        self.__filePath = ""
         lockutils.set_defaults(self.__sessionPath)
         self.__setup()
 
-    def __setup(self):
+    def __setup(self) -> None:
         #
         # self.__pickleProtocol = pickle.HIGHEST_PROTOCOL
         self.__pickleProtocol = 0
@@ -50,7 +51,7 @@ class ServiceDataStore:
         except:  # noqa: E722 pylint: disable=bare-except
             logger.exception("FAILING for filePath %r", self.__filePath)
 
-    def __serialize(self, iD):
+    def __serialize(self, iD: Dict[str, Any]) -> bool:
         try:
             with open(self.__filePath, "wb") as fb:
                 pickle.dump(iD, fb, self.__pickleProtocol)
@@ -61,8 +62,8 @@ class ServiceDataStore:
             logger.exception("Serialization failure with file %s", self.__filePath)
         return False
 
-    def __deserialize(self):
-        rD = {}
+    def __deserialize(self) -> Dict[str, Any]:
+        rD: Dict[str, Any] = {}
         try:
             if not os.access(self.__filePath, os.R_OK):
                 logger.warning("No data store in path %r ", self.__filePath)
@@ -79,31 +80,31 @@ class ServiceDataStore:
             logger.debug("Session %s - read dictionary %r", self.__sessionPath, rD["status"])
         return rD
 
-    def __str__(self):
+    def __str__(self) -> str:
         try:
             return "\n  ".join(self.__outputList())
         except:  # noqa: E722 pylint: disable=bare-except
             return ""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def dump(self, format="text"):  # noqa: A002,ARG002 pylint: disable=redefined-builtin,unused-argument
+    def dump(self, format: str = "text") -> str:  # noqa: A002,ARG002 pylint: disable=redefined-builtin,unused-argument
         try:
             return "\n   ".join(self.__outputList())
         except:  # noqa: E722 pylint: disable=bare-except
             return ""
 
-    def getFilePath(self):
+    def getFilePath(self) -> str:
         return self.__filePath
 
     #
     #  Getters()  reread before any access -
     #
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def __outputList(self):
+    def __outputList(self) -> List[str]:
         rD = self.__deserialize()
-        sL = []
+        sL: List[str] = []
         sL.append("Session data store contents:")
         for k in sorted(rD.keys()):
             v = rD[k]
@@ -111,7 +112,7 @@ class ServiceDataStore:
         return sL
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def get(self, key):
+    def get(self, key: str) -> Any:
         try:
             rD = self.__deserialize()
             return rD[key]
@@ -119,7 +120,7 @@ class ServiceDataStore:
             return ""
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def getDictionary(self):
+    def getDictionary(self) -> Dict[str, Any]:
         rD = self.__deserialize()
         return rD
 
@@ -127,7 +128,7 @@ class ServiceDataStore:
     #  Setters ()
     #
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def set(self, key, value, overWrite=True):
+    def set(self, key: str, value: Any, overWrite: bool = True) -> bool:
         try:
             rD = self.__deserialize()
             if overWrite:
@@ -143,7 +144,7 @@ class ServiceDataStore:
             return False
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def update(self, uDict):
+    def update(self, uDict: Dict[str, Any]) -> bool:
         """Update (without overwrite) objects in the first level dictionary store."""
         try:
             rD = self.__deserialize()
@@ -168,7 +169,7 @@ class ServiceDataStore:
             return False
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def updateAll(self, uDict):
+    def updateAll(self, uDict: Dict[str, Any]) -> bool:
         """Update with overwrite values first level dictionary store."""
         try:
             rD = self.__deserialize()
@@ -182,7 +183,7 @@ class ServiceDataStore:
             return False
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def append(self, key, value):
+    def append(self, key: str, value: Any) -> bool:
         try:
             rD = self.__deserialize()
             if key not in rD:
@@ -194,7 +195,7 @@ class ServiceDataStore:
             return False
 
     @lockutils.synchronized("sessiondatastore.lock", external=True)
-    def extend(self, key, valueList):
+    def extend(self, key: str, valueList: List[Any]) -> bool:
         try:
             rD = self.__deserialize()
             if key not in rD:

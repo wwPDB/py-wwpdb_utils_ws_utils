@@ -42,7 +42,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 class ServiceSessionStateTests(unittest.TestCase):
-    def testInstantiate(self):
+    def testInstantiate(self) -> None:
         """Test ServiceSessionState functionality"""
         sst = ServiceSessionState()
         paramdict = {"test": ["1"], "second": ["2"]}
@@ -50,7 +50,7 @@ class ServiceSessionStateTests(unittest.TestCase):
         self.assertTrue(ok)
 
         # This should fail as expect dictionary
-        ok = sst.setAppDataDict([1, 2, 3])
+        ok = sst.setAppDataDict([1, 2, 3])  # type: ignore[arg-type]
         self.assertFalse(ok)
 
         # Set value
@@ -58,7 +58,7 @@ class ServiceSessionStateTests(unittest.TestCase):
         self.assertTrue(ok)
 
         # Will fail - key cannot be mutable - and a list is
-        ok = sst.setAppData([1, 2, 3], ["3"])
+        ok = sst.setAppData([1, 2, 3], ["3"])  # type: ignore[arg-type]
         self.assertFalse(ok)
 
         # Check dictionary contents
@@ -72,12 +72,16 @@ class ServiceSessionStateTests(unittest.TestCase):
         # Upload/Download
         self.assertEqual(sst.getDownloadList(), [])
         self.assertTrue(sst.setDownload("art.txt", "/tmp/art.txt"))  # noqa: S108
-        self.assertTrue(sst.setDownload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a"))  # noqa: S108
+        self.assertTrue(
+            sst.setDownload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a")  # noqa: S108
+        )
         self.assertEqual(len(sst.getDownloadList()), 2)
 
         self.assertEqual(sst.getUploadList(), [])
         self.assertTrue(sst.setUpload("art.txt", "/tmp/art.txt"))  # noqa: S108
-        self.assertTrue(sst.setUpload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a"))  # noqa: S108
+        self.assertTrue(
+            sst.setUpload("bar.txt", "/tmp/art.txt", contentType="secretcontent", md5Digest="12a")  # noqa: S108
+        )
         self.assertEqual(len(sst.getUploadList()), 2)
 
         self.assertEqual(sst.getResponseFormat(), "files")
@@ -122,7 +126,7 @@ class ServiceSessionStateTests(unittest.TestCase):
         self.assertEqual(sst.getServiceWarningMessage(), "Test2")
 
 
-def suiteSessionStateTests():  # pragma: no cover
+def suiteSessionStateTests() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(ServiceSessionStateTests("testInstantiate"))
     return suite

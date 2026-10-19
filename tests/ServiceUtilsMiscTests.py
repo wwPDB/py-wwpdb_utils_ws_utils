@@ -43,10 +43,10 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 class ServiceUtilsMiscTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         pass
 
-    def testMD5(self):
+    def testMD5(self) -> None:
         """Test MD5 calculation"""
         md5 = getMD5(__file__, block_size=50)
         sys.stderr.write("MD5 size=50:  %s\n" % md5)
@@ -54,11 +54,11 @@ class ServiceUtilsMiscTests(unittest.TestCase):
         sys.stderr.write("MD5 size=def:  %s\n" % md5_2)
         self.assertEqual(md5, md5_2)
 
-        md5 = getMD5(__file__, block_size=50, hr=False)
-        sys.stderr.write("MD5 size=50, nohr:  %s\n" % md5)
+        md5_raw = getMD5(__file__, block_size=50, hr=False)
+        sys.stderr.write("MD5 size=50, nohr:  %r\n" % md5_raw)
 
 
-def suiteServiceUtilsMisc():  # pragma: no cover
+def suiteServiceUtilsMisc() -> unittest.TestSuite:  # pragma: no cover
     suite = unittest.TestSuite()
     suite.addTest(ServiceUtilsMiscTests("testMD5"))
     return suite
